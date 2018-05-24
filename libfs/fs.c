@@ -75,7 +75,7 @@ struct RootDirEntry {                // Inode structure
 union Block {
     struct SuperBlock   super;              // Superblock
     uint16_t            fat[BLOCK_SIZE/2];        
-    struct RootDir      rootdir[FS_FILE_MAX_COUNT];   // Pointer block
+    struct RootDirEntry rootdir[FS_FILE_MAX_COUNT];   // Pointer block
     char                block[BLOCK_SIZE];     // Data block
 };
 
@@ -271,9 +271,7 @@ int fs_create(const char *filename)
         eprintf("fs_create: root directory full error\n");
         return -1;
     }
-
-    dir[i]
-    
+ 
 
     return 0;
 }
