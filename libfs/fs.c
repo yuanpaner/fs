@@ -110,7 +110,7 @@ int fs_mount(const char *diskname)
     if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
         return -1;
 
-    // memcpy(sp->signature,FS_NAME,8);
+    memcpy(sp->signature,FS_NAME,8);
     // sp->signature = FS_NAME;
     sp->total_blk_count = block_disk_count();
     sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
@@ -118,7 +118,7 @@ int fs_mount(const char *diskname)
     sp->data_blk = sp->rdir_blk + 1;
     sp->data_blk_count = block_disk_count() / BLOCK_SIZE * BLOCK_SIZE;
 
-    eprintf("signature=%c\n",(sp->signature)[0]);
+    eprintf("signature=%s\n",sp->signature);
     eprintf("total_blk_count=%d\n",sp->total_blk_count);
     eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
     eprintf("rdir_blk=%d\n",sp->rdir_blk);
@@ -144,7 +144,7 @@ int fs_mount(const char *diskname)
 int fs_umount(void)
 {
 	/* TODO: Phase 1 */
-    // block_disk_close();
+    block_disk_close();
     return 0;
 }
 
