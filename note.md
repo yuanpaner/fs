@@ -1,6 +1,7 @@
 ECS 150: Project #4 - File system
 
 - [ ] memory leak for phase 1
+- [ ] phase 1, FAT
 
 ## General Framework
 

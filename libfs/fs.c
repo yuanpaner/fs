@@ -23,8 +23,6 @@
 // 需要一个global var存储the currently mounted file system.
 
 const static char FS_NAME[8] = "ECS150FS";
-// #define FS_NAME "ECS150FS"
-
 
 #define eprintf(format, ...) \
     fprintf (stderr, format, ##__VA_ARGS__)
@@ -56,21 +54,20 @@ struct SuperBlock
 {
 	// uint64_t signature; // 8 bytes, "ECS150FS"
     char     signature[8];
-	uint16_t total_blk_count; // Total amount of blocks of virtual disk 
-	uint16_t rdir_blk; // Root directory block index
-	uint16_t data_blk; // Data block start index
-	uint16_t data_blk_count; // Amount of data blocks
-	uint8_t  fat_blk_count; // Number of blocks for FAT
-    // 4079 Unused/Padding
-    char     unused[4079];
+	uint16_t total_blk_count;  // Total amount of blocks of virtual disk 
+	uint16_t rdir_blk;         // Root directory block index
+	uint16_t data_blk;         // Data block start index
+	uint16_t data_blk_count;   // Amount of data blocks
+	uint8_t  fat_blk_count;    // Number of blocks for FAT
+    char     unused[4079];     // 4079 Unused/Padding
 }__attribute__((packed));
 
 
-struct RootDir {              // Inode structure
-    char filename[FS_FILENAME_LEN];         // Whether or not inode is valid
-    uint32_t file_sz;          // Size of file
-    uint16_t first_data_blk; // Direct pointers
-    //10 byte Unused/Padding
+struct RootDir {                // Inode structure
+    char        filename[FS_FILENAME_LEN];         // Whether or not inode is valid
+    uint32_t    file_sz;          // Size of file
+    uint16_t    first_data_blk; // Direct pointers
+    char        unused[10];     //10 byte Unused/Padding
 }__attribute__((packed));
 
 // struct Fat
@@ -87,7 +84,7 @@ union Block {
 
 char * disk = NULL;
 struct SuperBlock * sp = NULL;
-
+struct RootDir ** dir = NULL; // 32 * 128
 /* TODO: Phase 1 */
 
 /**
@@ -100,6 +97,10 @@ struct SuperBlock * sp = NULL;
  *
  * Return: -1 if virtual disk file @diskname cannot be opened, or if no valid
  * file system can be located. 0 otherwise.
+ */
+ /* http://www.cs.ucsb.edu/~chris/teaching/cs170/projects/proj5.html
+With the mount operation, a file system becomes "ready for use." 
+You need to open the disk and then load the meta-information that is necessary to handle the file system operations that are discussed below. 
  */
 int fs_mount(const char *diskname)
 {
@@ -143,15 +144,37 @@ int fs_mount(const char *diskname)
  * Return: -1 if no underlying virtual disk was opened, or if the virtual disk
  * cannot be closed, or if there are still open file descriptors. 0 otherwise.
  */
+
+/**
+This function unmounts your file system from a virtual disk with name disk_name.  
+
+need to write back all meta-information so that the disk persistently reflects all changes that were made to the file system (such as new files that are created, data that is written, ...). 
+
+You should also close the disk. The function returns 0 on success, and -1 when the disk disk_name could not be closed or when data could not be written to the disk (this should not happen).
+
+It is important to observe that your file system must provide persistent storage. 
+This means that whenever umount_fs is called, all meta-information and file data (that you could temporarily have only in memory; depending on your implementation) must be written out to disk.
+
+*/ 
 int fs_umount(void)
 {
 	/* TODO: Phase 1 */
+    if(block_write(0, (void *)sp) < 0)// write back
+    {
+        eprintf("fs_umount error\n");
+        return -1; 
+    }
+
+    if(block_disk_close() < 0) {
+        eprintf("fs_umount error\n");
+        return -1;
+    }
 
     if(sp) {
         free(sp);
         sp = NULL;
     }
-    block_disk_close();
+
     return 0;
 }
 
@@ -189,7 +212,27 @@ int fs_info(void)
  */
 int fs_create(const char *filename)
 {
-	/* TODO: Phase 2 */
+    /* TODO: Phase 2 */
+	/* @filename is invalid; or string @filename is too long*/
+    if (filename == NULL || strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
+    {
+        eprintf("fs_create: filaname error\n");
+        return -1;
+    }
+    /* a file named @filename already exists; or the root directory already contains
+ * %FS_FILE_MAX_COUNT files*/
+    int i = 0;
+    if(sp == NULL){
+        eprintf("fs_create: no vd mounted\n");
+        return -1;
+    }
+    dir = malloc(BLOCK_SIZE);
+    if(block_read(sp->rdir_blk, (void *)dir) < 0){
+        eprintf("fs_create: read block fail\n");
+        return -1;
+    }
+
+
     return 0;
 }
 

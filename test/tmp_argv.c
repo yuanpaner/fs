@@ -16,8 +16,11 @@ int main(int argc, char **argv)
 	program = argv[0];
 
 	if (argc == 1)
-		printf("argc = 1 %s\n",program );
-	else printf("argc = %d\n", argc);
+		printf("argc = 1, str = %s\n",program );
+	else {
+        printf("argc = %d\nlength of the first argument = %d\n", argc, (int)strlen(argv[1]));
+    }
+
 
 	return 0;
 }
