@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
+//gcc -o tmp_argv tmp_argv.c 
 int main(int argc, char **argv)
 {
 	char *program;
@@ -21,13 +23,19 @@ int main(int argc, char **argv)
         printf("argc = %d\nlength of the first argument = %d\n", argc, (int)strlen(argv[1]));
     }
 
-    printf("test empty char, neither is allocated\n");
+    printf("test empty char, neither is allocated...\n");
     char *str1;// = malloc(10);
     char str2[8];// = malloc(10);
     // str[0] = '\0';
-    printf("char* str=%s\n", str1);
-    printf("char str[]=%s\n", str2); //???
+    printf("char* str\t=%s\n", str1);
+    printf("char str[]\t=%s\n", str2); //???
 
+    printf("allocated...\n");
+    char * str3 = malloc(10);
+    char * str4 = malloc(10);
+    str4[0] = '\0';
+    printf("char* str\t=%s\n", str3);
+    printf("set null at first, char* str\t=%s\n", str4); //???
 
 	return 0;
 }
