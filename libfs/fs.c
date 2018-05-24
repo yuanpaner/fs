@@ -50,10 +50,10 @@ struct RootDir {              // Inode structure
 // };
 
 union Block {
-    SuperBlock  super;              // Superblock
-    uint16_t    fat[BLOCK_SIZE/2];        
-    RootDir     rootdir[FS_FILE_MAX_COUNT];   // Pointer block
-    char        block[BLOCK_SIZE];     // Data block
+    struct SuperBlock   super;              // Superblock
+    uint16_t            fat[BLOCK_SIZE/2];        
+    struct RootDir      rootdir[FS_FILE_MAX_COUNT];   // Pointer block
+    char                block[BLOCK_SIZE];     // Data block
 };
 
 /* TODO: Phase 1 */
