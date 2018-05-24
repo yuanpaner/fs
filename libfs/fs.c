@@ -86,7 +86,7 @@ union Block {
 };
 
 char * disk = NULL;
-
+struct SuperBlock * sp = NULL;
 /* TODO: Phase 1 */
 
 /**
@@ -106,28 +106,29 @@ int fs_mount(const char *diskname)
 	if (block_disk_open(diskname) != 0) return -1;
 	
 
-    struct SuperBlock * sp = malloc(BLOCK_SIZE);
-    if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
+    struct SuperBlock * super = malloc(BLOCK_SIZE);
+    if(block_read(BLOCK_SIZE, (void *)super) < 0) 
         return -1;
 
-    memcpy(sp->signature,FS_NAME,8);
-    // sp->signature = FS_NAME;
-    sp->total_blk_count = block_disk_count();
-    sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
-    sp->rdir_blk = sp->fat_blk_count + 1;
-    sp->data_blk = sp->rdir_blk + 1;
-    sp->data_blk_count = block_disk_count() / BLOCK_SIZE * BLOCK_SIZE;
+    sp = super;
 
-    eprintf("signature=%s\n",sp->signature);
-    eprintf("total_blk_count=%d\n",sp->total_blk_count);
-    eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
-    eprintf("rdir_blk=%d\n",sp->rdir_blk);
-    eprintf("data_blk=%d\n",sp->data_blk);
-    eprintf("data_blk_count=%d\n",sp->data_blk_count);
+    // memcpy(sp->signature,FS_NAME,8);
+    // sp->total_blk_count = block_disk_count();
+    // sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
+    // sp->rdir_blk = sp->fat_blk_count + 1;
+    // sp->data_blk = sp->rdir_blk + 1;
+    // sp->data_blk_count = block_disk_count() / BLOCK_SIZE * BLOCK_SIZE;
+
+    // eprintf("signature=%s\n",sp->signature);
+    // eprintf("total_blk_count=%d\n",sp->total_blk_count);
+    // eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
+    // eprintf("rdir_blk=%d\n",sp->rdir_blk);
+    // eprintf("data_blk=%d\n",sp->data_blk);
+    // eprintf("data_blk_count=%d\n",sp->data_blk_count);
     
-    if(block_write(0, (void *)sp) < 0) return -1;
+    // if(block_write(0, (void *)sp) < 0) return -1;
 
-    block_disk_close();
+    // block_disk_close();
 
 	return 0;
 }
@@ -144,6 +145,11 @@ int fs_mount(const char *diskname)
 int fs_umount(void)
 {
 	/* TODO: Phase 1 */
+    
+    if(sp) {
+        free(sp);
+        sp = NULL;
+    }
     block_disk_close();
     return 0;
 }
@@ -158,6 +164,12 @@ int fs_umount(void)
 int fs_info(void)
 {
 	/* TODO: Phase 1 */
+    eprintf("signature=%s\n",sp->signature);
+    eprintf("total_blk_count=%d\n",sp->total_blk_count);
+    eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
+    eprintf("rdir_blk=%d\n",sp->rdir_blk);
+    eprintf("data_blk=%d\n",sp->data_blk);
+    eprintf("data_blk_count=%d\n",sp->data_blk_count);
     return 0;
 }
 
