@@ -107,7 +107,7 @@ int fs_mount(const char *diskname)
 	
 
     struct SuperBlock * super = malloc(BLOCK_SIZE);
-    if(block_read(BLOCK_SIZE, (void *)super) < 0) 
+    if(block_read(0, (void *)super) < 0) 
         return -1;
 
     sp = super;
@@ -145,7 +145,7 @@ int fs_mount(const char *diskname)
 int fs_umount(void)
 {
 	/* TODO: Phase 1 */
-    
+
     if(sp) {
         free(sp);
         sp = NULL;
