@@ -1,7 +1,14 @@
-ECS 150: Project #4.....  
-# file_system
+ECS 150: Project #4 - File system
 
-## Semaphore API
+## General Framework
+
+## Mounting/unmounting
+
+## File creation/deletion
+
+## File descriptor operations
+
+## File reading/writing
 
 
 
@@ -31,6 +38,8 @@ http://codeandlife.com/2012/04/07/simple-fat-and-sd-tutorial-part-2/
 links  
 https://www.edaboard.com/showthread.php?176568-C-code-for-FAT-file-implementation-using-PIC18F4550
   
+<sys/stat.h>  
+
 ## Source II 
 Virtual Filesystem (VFS) in Linux  
 https://www.tldp.org/LDP/lki/lki-3.html  
@@ -39,3 +48,30 @@ http://www.cs.odu.edu/~cs471w/spring11/lectures/FileSystemImplementation.htm
 https://cs.nyu.edu/~mwalfish/classes/15sp/labs/lab6.html  
 Block and Cluster  
 https://unix.stackexchange.com/questions/14409/difference-between-block-size-and-cluster-size  
+Mounting Definition (Linux)  
+http://www.linfo.org/mounting.html  
+
+
+## Else
+```c
+int main(int argc, char **argv)
+{
+    char *program;
+
+    program = argv[0];
+
+    if (argc == 1)
+        printf("argc = 1 %s\n",program );
+    else printf("argc = %d\n", argc);
+
+    return 0;
+}
+
+//gcc -o tmp_argv tmp_argv.c 
+```
+panyuandeMacBook-Pro:test Ada$ ./tmp_argv 123
+argc = 2
+panyuandeMacBook-Pro:test Ada$ ./tmp_argv
+argc = 1 ./tmp_argv
+panyuandeMacBook-Pro:test Ada$ ./tmp_argv 123 456
+argc = 3

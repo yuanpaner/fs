@@ -19,28 +19,54 @@
 // #define FS_OPEN_MAX_COUNT 32
 
 // #define FS_NAME "ECS150FS"
+
+// 需要一个global var存储the currently mounted file system.
+
 const static char FS_NAME[8] = "ECS150FS";
+#define FS_NAME "ECS150FS"
 
 /* Superbock
 * Holds statistics about the filesystem 
 * according to the requirment 8 + 2 + 2 + 2 + 2 + 1 + 4079 = 4096; one block
+
+Offset  Length (bytes)  Description
+0x00    8   Signature (must be equal to “ECS150FS”)
+0x08    2   Total amount of blocks of virtual disk
+0x0A    2   Root directory block index
+0x0C    2   Data block start index
+0x0E    2   Amount of data blocks
+0x10    1   Number of blocks for FAT
+0x11    4079    Unused/Padding
+
+
+* FAT
+The FAT is a flat array, possibly spanning several blocks, which entries are composed of 16-bit unsigned words. There are as many entries as data blocks in the disk.
+
+* Root Directory 
+Offset  Length (bytes)  Description
+0x00    16  Filename (including NULL character)
+0x10    4   Size of the file (in bytes)
+0x14    2   Index of the first data block
+0x16    10  Unused/Padding
 */
 struct SuperBlock 
 {
-	uint64_t signature; // 8 bytes, "ECS150FS"
-	uint16_t amount_blk; // Total amount of blocks of virtual disk 
-	uint16_t rootdir_blk_idx; // Root directory block index
-	uint16_t data_blk_idxs; // Data block start index
-	uint16_t amount_data_blk; // Amount of data blocks
-	uint8_t  num_blk_fat; // Number of blocks for FAT
+	// uint64_t signature; // 8 bytes, "ECS150FS"
+    char     signature[8];
+	uint16_t total_blk_count; // Total amount of blocks of virtual disk 
+	uint16_t rdir_blk; // Root directory block index
+	uint16_t data_blk; // Data block start index
+	uint16_t data_blk_count; // Amount of data blocks
+	uint8_t  fat_blk_count; // Number of blocks for FAT
     // 4079 Unused/Padding
+    char     unused[4079];
 };
 
 
 struct RootDir {              // Inode structure
     char filename[FS_FILENAME_LEN];         // Whether or not inode is valid
-    uint32_t Size;          // Size of file
-    uint16_t first_blk_idx; // Direct pointers
+    uint32_t file_sz;          // Size of file
+    uint16_t first_data_blk; // Direct pointers
     //10 byte Unused/Padding
 };
 
@@ -55,6 +81,19 @@ union Block {
     struct RootDir      rootdir[FS_FILE_MAX_COUNT];   // Pointer block
     char                block[BLOCK_SIZE];     // Data block
 };
+
+/**
+ * fs_ini - Mount a file system
+ * @diskname: Name of the virtual disk file
+ *
+ * calculate the space we need for FAT and etc
+ */
+int fs_ini(const char *diskname){
+
+    // int amount_blk = block_disk_count();
+
+    return 0;
+}
 
 /* TODO: Phase 1 */
 
@@ -74,6 +113,12 @@ int fs_mount(const char *diskname)
 	/* TODO: Phase 1 */
 	if (block_disk_open(diskname) != 0) return -1;
 	
+
+    struct SuperBlock * sp;
+    if(block_read(BLOCK_SIZE, (void *)&sp) < 0) 
+        return -1;
+    printf("FS_NAME : %s\n", sp->signature);
+
 
 	return 0;
 }
