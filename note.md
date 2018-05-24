@@ -72,9 +72,13 @@ int main(int argc, char **argv)
 
 //gcc -o tmp_argv tmp_argv.c 
 ```
-panyuandeMacBook-Pro:test Ada$ ./tmp_argv 123
+
+```c
+// execute result
+$ ./tmp_argv 123
 argc = 2
-panyuandeMacBook-Pro:test Ada$ ./tmp_argv
+$ ./tmp_argv
 argc = 1 ./tmp_argv
-panyuandeMacBook-Pro:test Ada$ ./tmp_argv 123 456
+$ ./tmp_argv 123 456
 argc = 3
+```
