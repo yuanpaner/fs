@@ -110,7 +110,7 @@ int fs_mount(const char *diskname)
         return -1;
 
     dir = malloc(BLOCK_SIZE);
-    if(block_read(rdir_blk, (void*)dir) < 0){
+    if(block_read(sp->rdir_blk, (void*)dir) < 0){
         eprintf("fs_mount read root dir error\n");
         return -1;
     }
@@ -252,7 +252,6 @@ int fs_create(const char *filename)
     }
     /* a file named @filename already exists; or the root directory already contains
  * %FS_FILE_MAX_COUNT files*/
-    int i = 0;
     if(sp == NULL){
         eprintf("fs_create: no vd mounted\n");
         return -1;
