@@ -25,6 +25,8 @@
 const static char FS_NAME[8] = "ECS150FS";
 #define FS_NAME "ECS150FS"
 
+
+#define eprintf(format, …) fprintf (stderr, format, ##__VA_ARGS__)
 /* Superbock
 * Holds statistics about the filesystem 
 * according to the requirment 8 + 2 + 2 + 2 + 2 + 1 + 4079 = 4096; one block
@@ -117,7 +119,13 @@ int fs_mount(const char *diskname)
     struct SuperBlock * sp = malloc(BLOCK_SIZE);
     if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
         return -1;
-    printf("py print FS_NAME : %s\n", sp->signature);
+    
+    eprintf("signature: %s",sp->signature);
+    eprintf("total_blk_count: %d",sp->total_blk_count);
+    eprintf("rdir_blk: %d",sp->rdir_blk);
+    eprintf("data_blk: %d",sp->data_blk);
+    eprintf("data_blk_count: %d",sp->data_blk_count);
+    eprintf("fat_blk_count: %d",sp->fat_blk_count);
 
     block_disk_close();
 
