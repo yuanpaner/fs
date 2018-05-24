@@ -63,7 +63,7 @@ struct SuperBlock
 	uint8_t  fat_blk_count; // Number of blocks for FAT
     // 4079 Unused/Padding
     char     unused[4079];
-};
+}__attribute__((packed));
 
 
 struct RootDir {              // Inode structure
@@ -71,7 +71,7 @@ struct RootDir {              // Inode structure
     uint32_t file_sz;          // Size of file
     uint16_t first_data_blk; // Direct pointers
     //10 byte Unused/Padding
-};
+}__attribute__((packed));
 
 // struct Fat
 // {
@@ -120,7 +120,9 @@ int fs_mount(const char *diskname)
     struct SuperBlock * sp = malloc(BLOCK_SIZE);
     if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
         return -1;
-    sp->data_blk_count = block_disk_count();
+
+    sp->total_blk_count = block_disk_count();
+
     eprintf("signature: %s\n",sp->signature);
     eprintf("total_blk_count: %d\n",sp->total_blk_count);
     eprintf("rdir_blk: %d\n",sp->rdir_blk);

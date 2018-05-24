@@ -19,6 +19,7 @@ Variadic  Macro
 https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html  
 Struct packed  
 https://stackoverflow.com/questions/11770451/what-is-the-meaning-of-attribute-packed-aligned4  
+https://www.geeksforgeeks.org/structure-member-alignment-padding-and-data-packing/
 
 Integer
 https://www.gnu.org/software/libc/manual/html_node/Integers.html  
