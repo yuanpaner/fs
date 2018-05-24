@@ -87,6 +87,7 @@ union Block {
 
 char * disk = NULL;
 struct SuperBlock * sp = NULL;
+
 /* TODO: Phase 1 */
 
 /**
@@ -106,7 +107,7 @@ int fs_mount(const char *diskname)
 	if (block_disk_open(diskname) != 0) return -1;
 	
 
-    struct SuperBlock * super = malloc(BLOCK_SIZE);
+    void * super = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE);
     if(block_read(0, (void *)super) < 0) 
         return -1;
 
