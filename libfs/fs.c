@@ -218,7 +218,7 @@ int fs_info(void)
     // my info
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
     eprintf("root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
-    eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
+    // eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
     eprintf("fat[0]=%d\n", (uint16_t)fat[0]); // fat[0]=65535
     eprintf("fat[1]=%d\n", (uint16_t)fat[1]); // fat[0]=65535
     return 0;
