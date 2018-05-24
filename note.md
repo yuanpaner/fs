@@ -1,5 +1,7 @@
 ECS 150: Project #4 - File system
 
+- [ ] memory leak for phase 1
+
 ## General Framework
 
 ## Mounting/unmounting
