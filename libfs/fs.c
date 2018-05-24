@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> // strcmp
 
 #include <stdint.h> //Integers
 #include "disk.h"
@@ -63,11 +63,12 @@ struct SuperBlock
 }__attribute__((packed));
 
 
-struct RootDir {                // Inode structure
+struct RootDirEntry {                // Inode structure
     char        filename[FS_FILENAME_LEN];         // Whether or not inode is valid
     uint32_t    file_sz;          // Size of file
     uint16_t    first_data_blk; // Direct pointers
-    char        unused[10];     //10 byte Unused/Padding
+    uint8_t     freeentry_idx;  //10 byte Unused/Padding
+    char        unused[9];     
 }__attribute__((packed));
 
 
@@ -80,7 +81,7 @@ union Block {
 
 char * disk = NULL;
 struct SuperBlock * sp = NULL;
-struct RootDir ** dir = NULL; // 32B * 128 entry
+struct RootDirEntry ** dir = NULL; // 32B * 128 entry
 uint16_t * fat = NULL;
 /* TODO: Phase 1 */
 
@@ -215,9 +216,10 @@ int fs_info(void)
     eprintf("data_blk_count=%d\n",sp->data_blk_count);
 
     // my info
-    eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]);
-    eprintf("root_dir[0].filename=%s\n", dir[0]->filename);
-    eprintf("fat[0]=%d\n", (uint16_t)fat[0]);
+    eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
+    eprintf("root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
+    eprintf("root_dir[0].free_entry=%d\n", dir[0]->freeentry_idx); 
+    eprintf("fat[0]=%d\n", (uint16_t)fat[0]); // fat[0]=65535
     return 0;
 }
 
@@ -235,15 +237,16 @@ int fs_info(void)
  * %FS_FILE_MAX_COUNT files. 0 otherwise.
 
 
- This function creates a new file with name name in the root directory of your file system. The file is initially empty. The maximum length for a file name is 15 characters. Also, there can be at most 64 files in the directory. Upon successful completion, a value of 0 is returned. fs_create returns -1 on failure. It is a failure when the file with name already exists, when the file name is too long (it exceeds 15 characters), or when there are already 64 files present in the root directory. Note that to access a file that is created, it has to be subsequently opened.
-
-
-
+ This function creates a new file with name in the root directory of your file system. The file is initially empty. The maximum length for a file name is 15 characters. Also, there can be at most 64 files in the directory. Upon successful completion, a value of 0 is returned. fs_create returns -1 on failure. It is a failure when the file with name already exists, when the file name is too long (it exceeds 15 characters), or when there are already 64 files present in the root directory. Note that to access a file that is created, it has to be subsequently opened.
 
  */
 int fs_create(const char *filename)
 {
     /* TODO: Phase 2 */
+    if(sp == NULL){
+        eprintf("fs_create: no vd mounted\n");
+        return -1;
+    }
 	/* @filename is invalid; or string @filename is too long*/
     if (filename == NULL || strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
     {
@@ -252,10 +255,23 @@ int fs_create(const char *filename)
     }
     /* a file named @filename already exists; or the root directory already contains
  * %FS_FILE_MAX_COUNT files*/
-    if(sp == NULL){
-        eprintf("fs_create: no vd mounted\n");
+    int i;
+    for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    {
+        /* code */
+        if(strcmp(dir[i]->filename, filename) == 0){
+            eprintf("fs_create: @filename already exists error\n");
+            return -1;
+        }
+        if(dir[i]->filename == NULL)
+            break;
+    }
+    if(i == FS_FILE_MAX_COUNT){
+        eprintf("fs_create: root directory full error\n");
         return -1;
     }
+
+    dir[i]
     
 
     return 0;

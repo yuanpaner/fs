@@ -21,6 +21,13 @@ int main(int argc, char **argv)
         printf("argc = %d\nlength of the first argument = %d\n", argc, (int)strlen(argv[1]));
     }
 
+    printf("test empty char, neither is allocated\n");
+    char *str1;// = malloc(10);
+    char str2[8];// = malloc(10);
+    // str[0] = '\0';
+    printf("char* str=%s\n", str1);
+    printf("char str[]=%s\n", str2); //???
+
 
 	return 0;
 }
