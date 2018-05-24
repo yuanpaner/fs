@@ -22,7 +22,7 @@
 
 // 需要一个global var存储the currently mounted file system.
 
-const static char FS_NAME[8] = "ECS150FS";
+// const static char FS_NAME[8] = "ECS150FS";
 #define FS_NAME "ECS150FS"
 
 
@@ -121,14 +121,21 @@ int fs_mount(const char *diskname)
     if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
         return -1;
 
+    
+    sp->signature = FS_NAME;
     sp->total_blk_count = block_disk_count();
+    sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
+    sp->rdir_blk = sp->fat_blk_count + 1;
+    sp->data_blk = sp->rdir_blk + 1;
+    sp->data_blk_count = block_disk_count() / BLOCK_SIZE * BLOCK_SIZE;
 
     eprintf("signature: %s\n",sp->signature);
     eprintf("total_blk_count: %d\n",sp->total_blk_count);
+    eprintf("fat_blk_count: %d\n",sp->fat_blk_count);
     eprintf("rdir_blk: %d\n",sp->rdir_blk);
     eprintf("data_blk: %d\n",sp->data_blk);
     eprintf("data_blk_count: %d\n",sp->data_blk_count);
-    eprintf("fat_blk_count: %d\n",sp->fat_blk_count);
+    
 
     block_disk_close();
 
