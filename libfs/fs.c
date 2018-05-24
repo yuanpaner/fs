@@ -85,18 +85,7 @@ union Block {
     char                block[BLOCK_SIZE];     // Data block
 };
 
-/**
- * fs_ini - Mount a file system
- * @diskname: Name of the virtual disk file
- *
- * calculate the space we need for FAT and etc
- */
-int fs_ini(const char *diskname){
-
-    // int amount_blk = block_disk_count();
-
-    return 0;
-}
+char * disk = NULL;
 
 /* TODO: Phase 1 */
 
@@ -121,7 +110,7 @@ int fs_mount(const char *diskname)
     if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
         return -1;
 
-    memcpy(sp->signature,FS_NAME,8);
+    // memcpy(sp->signature,FS_NAME,8);
     // sp->signature = FS_NAME;
     sp->total_blk_count = block_disk_count();
     sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
@@ -129,13 +118,14 @@ int fs_mount(const char *diskname)
     sp->data_blk = sp->rdir_blk + 1;
     sp->data_blk_count = block_disk_count() / BLOCK_SIZE * BLOCK_SIZE;
 
-    eprintf("signature: %s\n",sp->signature);
-    eprintf("total_blk_count: %d\n",sp->total_blk_count);
-    eprintf("fat_blk_count: %d\n",sp->fat_blk_count);
-    eprintf("rdir_blk: %d\n",sp->rdir_blk);
-    eprintf("data_blk: %d\n",sp->data_blk);
-    eprintf("data_blk_count: %d\n",sp->data_blk_count);
+    eprintf("signature=%c\n",(sp->signature)[0]);
+    eprintf("total_blk_count=%d\n",sp->total_blk_count);
+    eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
+    eprintf("rdir_blk=%d\n",sp->rdir_blk);
+    eprintf("data_blk=%d\n",sp->data_blk);
+    eprintf("data_blk_count=%d\n",sp->data_blk_count);
     
+    if(block_write(0, (void *)sp) < 0) return -1;
 
     block_disk_close();
 
@@ -154,6 +144,7 @@ int fs_mount(const char *diskname)
 int fs_umount(void)
 {
 	/* TODO: Phase 1 */
+    // block_disk_close();
     return 0;
 }
 
