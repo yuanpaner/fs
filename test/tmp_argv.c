@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     char *str1;// = malloc(10);
     char str2[8];// = malloc(10);
     // str[0] = '\0';
-    printf("char* str\t=%s\n", str1);
+    printf("char* str\t=%s\n", str1); // null
     printf("char str[]\t=%s\n", str2); //???
 
     printf("allocated...\n");
