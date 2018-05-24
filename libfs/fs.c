@@ -70,10 +70,6 @@ struct RootDir {                // Inode structure
     char        unused[10];     //10 byte Unused/Padding
 }__attribute__((packed));
 
-// struct Fat
-// {
-// 	uint16_t next;
-// };
 
 union Block {
     struct SuperBlock   super;              // Superblock
@@ -84,7 +80,8 @@ union Block {
 
 char * disk = NULL;
 struct SuperBlock * sp = NULL;
-struct RootDir ** dir = NULL; // 32 * 128
+struct RootDir ** dir = NULL; // 32B * 128 entry
+uint16_t * fat = NULL;
 /* TODO: Phase 1 */
 
 /**
@@ -108,11 +105,21 @@ int fs_mount(const char *diskname)
 	if (block_disk_open(diskname) != 0) return -1;
 	
 
-    void * super = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE);
-    if(block_read(0, (void *)super) < 0) 
+    sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE);
+    if(block_read(0, (void *)sp) < 0) 
         return -1;
 
-    sp = super;
+    dir = malloc(BLOCK_SIZE);
+    if(block_read(rdir_blk, (void*)dir) < 0){
+        eprintf("fs_mount read root dir error\n");
+        return -1;
+    }
+
+    fat = malloc(BLOCK_SIZE);
+    if(block_read(1, (void*)fat) < 0){
+        eprintf("fs_mount read first fat block error\n");
+        return -1;
+    }
 
     // memcpy(sp->signature,FS_NAME,8);
     // sp->total_blk_count = block_disk_count();
@@ -174,6 +181,17 @@ int fs_umount(void)
         free(sp);
         sp = NULL;
     }
+    if(dir){
+        free(dir);
+        dir = NULL;
+    }
+    if(fat)
+    {
+        free(fat);
+        fat = NULL;
+    }
+
+    // todo: close all the file descriptors
 
     return 0;
 }
@@ -188,12 +206,18 @@ int fs_umount(void)
 int fs_info(void)
 {
 	/* TODO: Phase 1 */
+    eprintf("FS Info:\n");
     eprintf("signature=%s\n",sp->signature);
     eprintf("total_blk_count=%d\n",sp->total_blk_count);
     eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
     eprintf("rdir_blk=%d\n",sp->rdir_blk);
     eprintf("data_blk=%d\n",sp->data_blk);
     eprintf("data_blk_count=%d\n",sp->data_blk_count);
+
+    // my info
+    eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]);
+    eprintf("root_dir[0].filename=%s\n", dir[0]->filename);
+    eprintf("fat[0]=%d\n", (uint16_t)fat[0]);
     return 0;
 }
 
@@ -209,6 +233,13 @@ int fs_info(void)
  * Return: -1 if @filename is invalid, if a file named @filename already exists,
  * or if string @filename is too long, or if the root directory already contains
  * %FS_FILE_MAX_COUNT files. 0 otherwise.
+
+
+ This function creates a new file with name name in the root directory of your file system. The file is initially empty. The maximum length for a file name is 15 characters. Also, there can be at most 64 files in the directory. Upon successful completion, a value of 0 is returned. fs_create returns -1 on failure. It is a failure when the file with name already exists, when the file name is too long (it exceeds 15 characters), or when there are already 64 files present in the root directory. Note that to access a file that is created, it has to be subsequently opened.
+
+
+
+
  */
 int fs_create(const char *filename)
 {
@@ -226,12 +257,7 @@ int fs_create(const char *filename)
         eprintf("fs_create: no vd mounted\n");
         return -1;
     }
-    dir = malloc(BLOCK_SIZE);
-    if(block_read(sp->rdir_blk, (void *)dir) < 0){
-        eprintf("fs_create: read block fail\n");
-        return -1;
-    }
-
+    
 
     return 0;
 }
@@ -245,6 +271,9 @@ int fs_create(const char *filename)
  *
  * Return: -1 if @filename is invalid, if there is no file named @filename to
  * delete, or if file @filename is currently open. 0 otherwise.
+
+ This function deletes the file with name name from the root directory of your file system and frees all data blocks and meta-information that correspond to that file. The file that is being deleted must not be open. That is, there cannot be any open file descriptor that refers to the file name. When the file is open at the time that fs_delete is called, the call fails and the file is not deleted. Upon successful completion, a value of 0 is returned. fs_delete returns -1 on failure. It is a failure when the file with name does not exist. It is also a failure when the file is currently open (i.e., there exists at least one open file descriptor that is associated with this file).
+
  */
 int fs_delete(const char *filename)
 {
@@ -280,6 +309,11 @@ int fs_ls(void)
  * Return: -1 if @filename is invalid, there is no file named @filename to open,
  * or if there are already %FS_OPEN_MAX_COUNT files currently open. Otherwise,
  * return the file descriptor.
+
+
+ The file specified by name is opened for reading and writing, and the file descriptor corresponding to this file is returned to the calling function. If successful, fs_open returns a non-negative integer, which is a file descriptor that can be used to subsequently access this file. Note that the same file (file with the same name) can be opened multiple times. When this happens, your file system is supposed to provide multiple, independent file descriptors. Your library must support a maximum of 32 file descriptors that can be open simultaneously. fs_open returns -1 on failure. It is a failure when the file with name cannot be found (i.e., it has not been created previously or is already deleted). It is also a failure when there are already 32 file descriptors active. When a file is opened, the file offset (seek pointer) is set to 0 (the beginning of the file).
+
+
  */
 int fs_open(const char *filename)
 {
@@ -295,6 +329,10 @@ int fs_open(const char *filename)
  *
  * Return: -1 if file descriptor @fd is invalid (out of bounds or not currently
  * open). 0 otherwise.
+
+
+ The file descriptor fildes is closed. A closed file descriptor can no longer be used to access the corresponding file. Upon successful completion, a value of 0 is returned. In case the file descriptor fildes does not exist or is not open, the function returns -1.
+
  */
 int fs_close(int fd)
 {
@@ -329,6 +367,13 @@ int fs_stat(int fd)
  * Return: -1 if file descriptor @fd is invalid (out of bounds or not currently
  * open), or if @offset is out of bounds (beyond the end of the file). 0
  * otherwise.
+
+
+ This function sets the file pointer (the offset used for read and write operations) associated with the file descriptor fildes to the argument offset. It is an error to set the file pointer beyond the end of the file. To append to a file, one can set the file pointer to the end of a file, for example, by calling fs_lseek(fd, fs_get_filesize(fd));. Upon successful completion, a value of 0 is returned. fs_lseek returns -1 on failure. It is a failure when the file descriptor fildes is invalid, when the requested offset is larger than the file size, or when offset is less than zero.
+
+
+
+
  */
 int fs_lseek(int fd, size_t offset)
 {
@@ -354,6 +399,9 @@ int fs_lseek(int fd, size_t offset)
  *
  * Return: -1 if file descriptor @fd is invalid (out of bounds or not currently
  * open). Otherwise return the number of bytes actually written.
+
+ This function attempts to write nbyte bytes of data to the file referenced by the descriptor fildes from the buffer pointed to by buf. The function assumes that the buffer buf holds at least nbyte bytes. When the function attempts to write past the end of the file, the file is automatically extended to hold the additional bytes. It is possible that the disk runs out of space while performing a write operation. In this case, the function attempts to write as many bytes as possible (i.e., to fill up the entire space that is left). The maximum file size is 16M (which is, 4,096 blocks, each 4K). Upon successful completion, the number of bytes that were actually written is returned. This number could be smaller than nbyte when the disk runs out of space (when writing to a full disk, the function returns zero). In case of failure, the function returns -1. It is a failure when the file descriptor fildes is not valid. The write function implicitly increments the file pointer by the number of bytes that were actually written.
+
  */
 int fs_write(int fd, void *buf, size_t count)
 {
@@ -378,6 +426,11 @@ int fs_write(int fd, void *buf, size_t count)
  *
  * Return: -1 if file descriptor @fd is invalid (out of bounds or not currently
  * open). Otherwise return the number of bytes actually read.
+
+
+ This function attempts to read nbyte bytes of data from the file referenced by the descriptor fildes into the buffer pointed to by buf. The function assumes that the buffer buf is large enough to hold at least nbyte bytes. When the function attempts to read past the end of the file, it reads all bytes until the end of the file. Upon successful completion, the number of bytes that were actually read is returned. This number could be smaller than nbyte when attempting to read past the end of the file (when trying to read while the file pointer is at the end of the file, the function returns zero). In case of failure, the function returns -1. It is a failure when the file descriptor fildes is not valid. The read function implicitly increments the file pointer by the number of bytes that were actually read.
+
+
  */
 int fs_read(int fd, void *buf, size_t count)
 {

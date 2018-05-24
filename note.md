@@ -2,6 +2,8 @@ ECS 150: Project #4 - File system
 
 - [ ] memory leak for phase 1
 - [ ] phase 1, FAT
+- [ ] fat_free_ratio=4095/4096 ? rdir_free_ratio=128/128 ?
+
 
 ## General Framework
 
