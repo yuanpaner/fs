@@ -115,7 +115,7 @@ int fs_mount(const char *diskname)
 	
 
     struct SuperBlock * sp = malloc(BLOCK_SIZE);
-    if(block_read(BLOCK_SIZE, (void *)&sp) < 0) 
+    if(block_read(BLOCK_SIZE, (void *)sp) < 0) 
         return -1;
     printf("py print FS_NAME : %s\n", sp->signature);
 
