@@ -114,11 +114,12 @@ int fs_mount(const char *diskname)
 	if (block_disk_open(diskname) != 0) return -1;
 	
 
-    struct SuperBlock * sp;
+    struct SuperBlock * sp = malloc(BLOCK_SIZE);
     if(block_read(BLOCK_SIZE, (void *)&sp) < 0) 
         return -1;
-    printf("FS_NAME : %s\n", sp->signature);
+    printf("py print FS_NAME : %s\n", sp->signature);
 
+    block_disk_close();
 
 	return 0;
 }
