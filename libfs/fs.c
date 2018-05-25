@@ -336,11 +336,11 @@ int fs_create(const char *filename)
         return -1; // no valid dir entry
     // the ith entry is available
     strcpy(dir[entry_id]->filename, filename);
-    dir[i]->file_sz = 0;
-    dir[i]->first_data_blk = get_freefat_idx(); // entry
-    if(dir[i]->first_data_blk = -1)
+    dir[entry_id]->file_sz = 0;
+    dir[entry_id]->first_data_blk = get_freefat_idx(); // entry
+    if(dir[entry_id]->first_data_blk = -1)
         return -1;  // ? need unmounted?
-    fat[dir[i]->first_data_blk] = 0xFFFF;
+    fat[dir[entry_id]->first_data_blk] = 0xFFFF;
 
     return 0;
 }
