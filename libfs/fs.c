@@ -157,7 +157,7 @@ int fs_mount(const char *diskname)
 
     fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
     memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
-    for (int i = 0; i < fat_blk_count; ++i)
+    for (int i = 0; i < sp->fat_blk_count; ++i)
     {
         if(block_read(i+1, ((void*)fat) + BLOCK_SIZE * i) < 0){
             eprintf("fs_mount read %d th(from 1) fat block error\n", i);
@@ -222,7 +222,7 @@ int fs_umount(void)
         eprintf("fs_umount write back dir error\n");
         return -1; 
     }
-    for (int i = 0; i < fat_blk_count; ++i)
+    for (int i = 0; i < sp->fat_blk_count; ++i)
     {
         if(block_write(1 + i, (void *)fat + BLOCK_SIZE * i) < 0)// write back
         {
@@ -338,7 +338,7 @@ int fs_create(const char *filename)
     strcpy(dir[entry_id]->filename, filename);
     dir[entry_id]->file_sz = 0;
     dir[entry_id]->first_data_blk = get_freefat_idx(); // entry
-    if(dir[entry_id]->first_data_blk = -1)
+    if(dir[entry_id]->first_data_blk == -1)
         return -1;  // ? need unmounted?
     fat[dir[entry_id]->first_data_blk] = 0xFFFF;
 
