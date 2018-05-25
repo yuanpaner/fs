@@ -404,7 +404,7 @@ int fs_delete(const char *filename)
 
     uint16_t first_data_blk =  dir[entry_id]->first_data_blk;
     erase_fat(first_data_blk);
-    // dir[entry_id]->filename = NULL;
+    memset(dir[entry_id], 0, FS_FILENAME_LEN); // error: dir[entry_id]->filename = NULL;
 
     return 0;
 }
