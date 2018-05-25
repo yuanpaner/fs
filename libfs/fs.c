@@ -386,7 +386,7 @@ int fs_info(void)
 {
 	/* TODO: Phase 1 */
     oprintf("FS Info:\n");
-    eprintf("signature=%s\n",sp->signature);
+    // eprintf("signature=%s\n",sp->signature);
     oprintf("total_blk_count=%d\n",sp->total_blk_count);
     oprintf("fat_blk_count=%d\n",sp->fat_blk_count);
     oprintf("rdir_blk=%d\n",sp->rdir_blk);
@@ -680,7 +680,7 @@ int fs_write(int fd, void *buf, size_t count)
     int file_sz_new = file_sz_old + count;
     int blk_old = file_blk_count(file_sz_old);
     int blk_new = file_blk_count(file_sz_new);
-    // uint16_t old_last = dir_entry->last_data_blk;
+    uint16_t old_last = dir_entry->last_data_blk;
     int blk_more = blk_new - blk_old;
 
     if(blk_old != blk_new){
@@ -706,6 +706,17 @@ int fs_write(int fd, void *buf, size_t count)
     //write the other blocks as a whole
 
     // int blk_more_real = blk_new - blk_old - blk_more;
+    // ? fat index, and actual index, id should think about
+    // uint16_t truncate = dir_entry->file_sz % BLOCK_SIZE;
+    // if(truncate == 0){
+
+    // }
+    // else{
+    //     void * buf_temp = malloc(BLOCK_SIZE);
+    //     if(block_read(0, buf_temp) < 0) 
+    //     memcpy(buf_temp, )
+    // }
+    //     truncate += real_count;
 
     dir_entry->unused[0] = 'n';
 
