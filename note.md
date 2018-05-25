@@ -44,7 +44,17 @@ http://codeandlife.com/2012/04/07/simple-fat-and-sd-tutorial-part-2/
 links  
 https://www.edaboard.com/showthread.php?176568-C-code-for-FAT-file-implementation-using-PIC18F4550
   
-<sys/stat.h>  
+piazza 
+@453   
+fs_info() should print the entire output generate when you enter "./fs_ref.x info ...".
+The values you need to print are:
+total_blk_count = total number of blocks
+fat_blk_count = number of FAT blocks
+rdir_blk = Index of root directory
+data_blk = Index of first data block in virtual disk
+data_blk_count = number of data blocks
+fat_free_ratio = Number of FAT entries available (free) / number of data blocks
+rdir_free_ratio = Number of root directory entries available (free) / size of root directory
 
 ## Source II 
 Virtual Filesystem (VFS) in Linux  

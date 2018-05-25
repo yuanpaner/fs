@@ -61,8 +61,12 @@ struct SuperBlock
 	uint16_t rdir_blk;         // Root directory block index
 	uint16_t data_blk;         // Data block start index
 	uint16_t data_blk_count;   // Amount of data blocks
-	uint8_t  fat_blk_count;    // Number of blocks for FAT
-    char     unused[4079];     // 4079 Unused/Padding
+    uint8_t  fat_blk_count;    // Number of blocks for FAT
+
+    uint16_t  fat_used;    // Number of blocks for FAT
+	uint16_t  rdir_used;    // Number of blocks for FAT
+
+    char     unused[4063];     // 4079 Unused/Padding, I use 32bits
 }__attribute__((packed));
 
 
@@ -78,7 +82,8 @@ struct RootDirEntry {                // Inode structure
 struct FileDescriptor
 {
     void * file_entry;
-    uint32_t offset;
+    // uint32_t offset;
+    size_t offset;
 };
 
 union Block {
@@ -179,17 +184,22 @@ int get_dirEntry_idx(const char * filename){
     return -1;
 }
 
+/* set the fat as zero ( free ) again
+ * update the sp->fat_used
+*/
 int erase_fat(uint16_t * id){ // recursion to erase
     if(sp == NULL || root_dir == NULL)
         return -1;
 
     if(*id == 0xFFFF){
         *id = 0;
+        sp->fat_used -= 1;
         return 0;
     }
 
     uint16_t * next = fat + sizeof(uint16_t) * (*id);
     erase_fat(next);
+    sp->fat_used -= 1;
     *id = 0;
 
     return 0;
@@ -224,6 +234,8 @@ int fs_mount(const char *diskname)
     memset(sp, 0, BLOCK_SIZE);
     if(block_read(0, (void *)sp) < 0) 
         return -1;
+    if(sp->fat_used == 0)
+        sp->fat_used = 1;
 
     root_dir = malloc(BLOCK_SIZE);
     memset(root_dir, 0, BLOCK_SIZE);
@@ -367,6 +379,10 @@ int fs_info(void)
     oprintf("data_blk=%d\n",sp->data_blk);
     oprintf("data_blk_count=%d\n",sp->data_blk_count);
 
+    oprintf("fat_free_ratio=%d/%d\n", (sp->data_blk_count - sp->fat_used), sp->data_blk_count);
+    oprintf("rdir_free_ratio=%d/%d\n", (FS_FILE_MAX_COUNT - sp->rdir_used),FS_FILE_MAX_COUNT);
+
+
     // my info
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
 
@@ -444,12 +460,17 @@ int fs_create(const char *filename)
     strcpy(dir_entry->filename, filename);
     dir_entry->file_sz = 0;
     dir_entry->first_data_blk = get_freeFat_idx(); // entry
-    if(dir_entry->first_data_blk == -1)
-        return -1;  // ? need unmounted?
+    if(dir_entry->first_data_blk == -1){ // not valid fat
+        memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
+        return -1; // unmount?
+    }
 
     // fat16 = fat + sizeof(uint16_t) * (dir_entry->first_data_blk);
     fat16 = get_fat(dir_entry->first_data_blk);
     *fat16 = 0xFFFF;
+
+    sp->fat_used += 1;
+    sp->rdir_used += 1;
 
     return 0;
 }
@@ -483,6 +504,7 @@ int fs_delete(const char *filename)
     erase_fat(fat16);
     memset(cur_entry->filename, 0, FS_FILENAME_LEN); // error: dir[entry_id]->filename = NULL;
 
+    sp->rdir_used -= 1;
     return 0;
 }
 
@@ -564,6 +586,8 @@ int fs_close(int fd)
     ((struct RootDirEntry *)(filedes[fd]->file_entry))->open -= 1;
     free(filedes[fd]);
     filedes[fd] = NULL;
+
+    fd_cnt--;
 
     return 0;
 }
