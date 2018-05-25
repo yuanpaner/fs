@@ -85,6 +85,41 @@ char * disk = NULL;
 struct SuperBlock * sp = NULL;
 struct RootDirEntry ** dir = NULL; // 32B * 128 entry
 uint16_t * fat = NULL;
+
+
+int get_direntry_idx(const char * filename){
+    if(dir == NULL)
+        return -1;
+    int i;
+    for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    {
+        /* code */
+        if(strcmp(dir[i]->filename, filename) == 0){
+            eprintf("fs_create: @filename already exists error\n");
+            return -1;
+        }
+        if(dir[i]->filename == NULL)
+            break;
+    }
+    if(i == FS_FILE_MAX_COUNT){
+        eprintf("fs_create: root directory full error\n");
+        return -1;
+    }
+    return i;
+}
+int get_freefat_idx(){
+    if(fat == NULL)
+        return -1;
+    int i = 1;
+    for (; i < fat_blk_count * BLOCK_SIZE / 2 ; ++i)
+        if (fat[i] == 0 )
+            return i;
+    if( i == fat_blk_count * BLOCK_SIZE / 2)
+        eprintf("fat exhausted\n");
+
+    return -1;
+
+}
 /* TODO: Phase 1 */
 
 /**
@@ -109,20 +144,27 @@ int fs_mount(const char *diskname)
 	
 
     sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE);
+    memset(sp, 0, BLOCK_SIZE);
     if(block_read(0, (void *)sp) < 0) 
         return -1;
 
     dir = malloc(BLOCK_SIZE);
+    memset(dir, 0, BLOCK_SIZE);
     if(block_read(sp->rdir_blk, (void*)dir) < 0){
         eprintf("fs_mount read root dir error\n");
         return -1;
     }
 
-    fat = malloc(BLOCK_SIZE);
-    if(block_read(1, (void*)fat) < 0){
-        eprintf("fs_mount read first fat block error\n");
-        return -1;
+    fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
+    memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
+    for (int i = 0; i < fat_blk_count; ++i)
+    {
+        if(block_read(i+1, ((void*)fat) + BLOCK_SIZE * i) < 0){
+            eprintf("fs_mount read %d th(from 1) fat block error\n", i);
+            return -1;
+        }
     }
+    
 
     // memcpy(sp->signature,FS_NAME,8);
     // sp->total_blk_count = block_disk_count();
@@ -168,12 +210,27 @@ This means that whenever umount_fs is called, all meta-information and file data
 */ 
 int fs_umount(void)
 {
-	/* TODO: Phase 1 */
-    if(block_write(0, (void *)sp) < 0)// write back
+    /* TODO: Phase 1 */
+	/* write back */
+    if(block_write(0, (void *)sp) < 0)
     {
-        eprintf("fs_umount error\n");
+        eprintf("fs_umount write back sp error\n");
         return -1; 
     }
+    if(block_write(sp->rdir_blk, (void *)dir) < 0)// write back
+    {
+        eprintf("fs_umount write back dir error\n");
+        return -1; 
+    }
+    for (int i = 0; i < fat_blk_count; ++i)
+    {
+        if(block_write(1 + i, (void *)fat + BLOCK_SIZE * i) < 0)// write back
+        {
+            eprintf("fs_umount write back dir error\n");
+            return -1; 
+        }
+    }
+
 
     if(block_disk_close() < 0) {
         eprintf("fs_umount error\n");
@@ -246,8 +303,8 @@ int fs_info(void)
 int fs_create(const char *filename)
 {
     /* TODO: Phase 2 */
-    if(sp == NULL){
-        eprintf("fs_create: no vd mounted\n");
+    if(sp == NULL || dir == NULL){
+        eprintf("fs_create: no vd mounted or root dir read\n");
         return -1;
     }
 	/* @filename is invalid; or string @filename is too long*/
@@ -258,22 +315,32 @@ int fs_create(const char *filename)
     }
     /* a file named @filename already exists; or the root directory already contains
  * %FS_FILE_MAX_COUNT files*/
-    int i;
-    for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
-    {
-        /* code */
-        if(strcmp(dir[i]->filename, filename) == 0){
-            eprintf("fs_create: @filename already exists error\n");
-            return -1;
-        }
-        if(dir[i]->filename == NULL)
-            break;
-    }
-    if(i == FS_FILE_MAX_COUNT){
-        eprintf("fs_create: root directory full error\n");
-        return -1;
-    }
- 
+    // packed to function get_direntry_idx(const char*)
+    // int i;
+    // for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    // {
+    //     /* code */
+    //     if(strcmp(dir[i]->filename, filename) == 0){
+    //         eprintf("fs_create: @filename already exists error\n");
+    //         return -1;
+    //     }
+    //     if(dir[i]->filename == NULL)
+    //         break;
+    // }
+    // if(i == FS_FILE_MAX_COUNT){
+    //     eprintf("fs_create: root directory full error\n");
+    //     return -1;
+    // }
+    int entry_id = get_direntry_idx(filename);
+    if(entry_id < 0)
+        return -1; // no valid dir entry
+    // the ith entry is available
+    strcpy(dir[entry_id]->filename, filename);
+    dir[i]->file_sz = 0;
+    dir[i]->first_data_blk = get_freefat_idx(); // entry
+    if(dir[i]->first_data_blk = -1)
+        return -1;  // ? need unmounted?
+    fat[dir[i]->first_data_blk] = 0xFFFF;
 
     return 0;
 }

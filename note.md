@@ -57,6 +57,9 @@ https://unix.stackexchange.com/questions/14409/difference-between-block-size-and
 Mounting Definition (Linux)  
 http://www.linfo.org/mounting.html  
 
+memcpy and strcpy  
+https://stackoverflow.com/questions/2898364/strcpy-vs-memcpy  
+
 
 ## Else
 ```c
