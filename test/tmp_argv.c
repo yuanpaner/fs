@@ -37,5 +37,13 @@ int main(int argc, char **argv)
     printf("char* str\t=%s\n", str3);
     printf("set null at first, char* str\t=%s\n", str4); //???
 
+
+    static char msg1[3] = "AAA";
+    char chararr[4];
+    memcpy(chararr, msg1, 4);
+    printf("char array\t=%s\n", chararr);
+    memset(chararr, 0, 4);
+    printf("after memset 0 array\t=%s\n", chararr);
+
 	return 0;
 }
