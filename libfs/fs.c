@@ -233,6 +233,7 @@ int fs_mount(const char *diskname)
             return -1;
         }
     }
+    fat16 = get_fat(0);
     
 
     // memcpy(sp->signature,FS_NAME,8);
