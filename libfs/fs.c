@@ -108,13 +108,13 @@ int get_direntry_idx(const char * filename){
     return i;
 }
 int get_freefat_idx(){
-    if(fat == NULL)
+    if(fat == NULL || sp == NULL)
         return -1;
     int i = 1;
-    for (; i < fat_blk_count * BLOCK_SIZE / 2 ; ++i)
+    for (; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i)
         if (fat[i] == 0 )
             return i;
-    if( i == fat_blk_count * BLOCK_SIZE / 2)
+    if( i == sp->fat_blk_count * BLOCK_SIZE / 2)
         eprintf("fat exhausted\n");
 
     return -1;
