@@ -147,7 +147,7 @@ int erase_fat(uint16_t id){
 
     if(fat[id] == 0xFFFF){
         fat[id] = 0;
-        return;
+        return -1;
     }
 
     erase_fat(fat[id]);
@@ -404,7 +404,7 @@ int fs_delete(const char *filename)
 
     uint16_t first_data_blk =  dir[entry_id]->first_data_blk;
     erase_fat(first_data_blk);
-    dir[entry_id]->filename = NULL;
+    // dir[entry_id]->filename = NULL;
 
     return 0;
 }
