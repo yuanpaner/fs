@@ -97,7 +97,7 @@ struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry
 void * fat = NULL;
 uint16_t * fat16 = NULL;
 
-int fd = 0; 
+int fd_cnt = 0; 
 struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
 
 
@@ -248,7 +248,7 @@ int fs_mount(const char *diskname)
     for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
         filedes[i] = NULL;
     
-    fd = 0;
+    fd_cnt = 0;
     // memcpy(sp->signature,FS_NAME,8);
     // sp->total_blk_count = block_disk_count();
     // sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
@@ -337,7 +337,7 @@ int fs_umount(void)
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i)
     {
         if(filedes[i] != NULL)
-            fee(filedes[i]);
+            free(filedes[i]);
     }
 
     // todo: close all the file descriptors
@@ -529,7 +529,7 @@ int fs_open(const char *filename)
     dir_entry = get_dir(entry_id);
     ++(dir_entry->open);
 
-    int fd = get_validfd();
+    int fd = get_valid_fd();
     filedes[fd] = malloc(sizeof(struct FileDescriptor));
     filedes[fd]->file_entry = dir_entry;
     filedes[fd]->offset = 0;
@@ -557,10 +557,10 @@ int fs_close(int fd)
 	/* TODO: Phase 3 */
     if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL)  return -1;
 
-    ((struct RootDirEntry *)(fildes[fd]->file_entry))->open -= 1;
+    ((struct RootDirEntry *)(filedes[fd]->file_entry))->open -= 1;
     free(filedes[fd]);
     filedes[fd] = NULL;
-    
+
     return 0;
 }
 
