@@ -74,6 +74,10 @@ struct RootDirEntry {                // Inode structure
     char        unused[2];     
 }__attribute__((packed));
 
+struct FileDescriptor
+{
+    void * dir_entry;
+};
 
 union Block {
     struct SuperBlock   super;              // Superblock
@@ -82,10 +86,14 @@ union Block {
     char                block[BLOCK_SIZE];     // Data block
 };
 
+
+
 char * disk = NULL;
 struct SuperBlock * sp = NULL;
 struct RootDirEntry ** dir = NULL; // 32B * 128 entry
 uint16_t * fat = NULL;
+int fd = 0; 
+struct FileDescriptor filedes[FS_OPEN_MAX_COUNT];
 
 
 int get_freeEntry_idx(const char * filename){

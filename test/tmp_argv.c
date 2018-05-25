@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+static int fd[16] = {-1};
 
 //gcc -o tmp_argv tmp_argv.c 
 int main(int argc, char **argv)
@@ -44,6 +45,11 @@ int main(int argc, char **argv)
     printf("char array\t=%s\n", chararr);
     memset(chararr, 0, 4);
     printf("after memset 0 array\t=%s\n", chararr);
+
+    for (int i = 0; i < 16; ++i)
+    {
+        printf("fd[%d] = %d\n", i, fd[i]);
+    }
 
 	return 0;
 }
