@@ -313,7 +313,7 @@ int fs_info(void)
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
     eprintf("root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
 
-    memset(dir[0]->filename, 0, FS_FILENAME_LEN);
+    memset(dir[0]->filename, 0, FS_FILENAME_LEN * sizeof(char));
     eprintf("after memeset(0), root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
     // eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
     eprintf("fat[0]=%d\n", (uint16_t)fat[0]); // fat[0]=65535
