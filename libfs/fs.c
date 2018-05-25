@@ -283,7 +283,7 @@ int fs_umount(void)
         eprintf("fs_umount write back sp error\n");
         return -1; 
     }
-    if(block_write(sp->rdir_blk, dir) < 0)// write back
+    if(block_write(sp->rdir_blk, root_dir) < 0)// write back
     {
         eprintf("fs_umount write back dir error\n");
         return -1; 
@@ -352,8 +352,8 @@ int fs_info(void)
     // }
     eprintf("after memeset(0), root_dir[0].filename=%s\n", dir_entry->filename); // root_dir[0].filename=(null)
     // eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
-    eprintf("fat[0]=%d\n", (uint16_t)fat); // fat[0]=65535
-    eprintf("fat[1]=%d\n", (uint16_t)(fat+2));  
+    eprintf("fat[0]=%d\n", *fat16); // fat[0]=65535
+    // eprintf("fat[1]=%d\n", (uint16_t)(fat+2));  
     return 0;
 }
 
