@@ -397,7 +397,7 @@ int fs_info(void)
     oprintf("rdir_free_ratio=%d/%d\n", (FS_FILE_MAX_COUNT - sp->rdir_used),FS_FILE_MAX_COUNT);
 
 
-    // my info
+    /* my info
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
 
     if(dir_entry->filename == NULL)
@@ -408,6 +408,7 @@ int fs_info(void)
     memset(dir_entry, 0, sizeof(dir_entry->filename));
     eprintf("after memeset(0), root_dir[0].filename=%s\n", dir_entry->filename); // root_dir[0].filename=(null)
     eprintf("fat[0]=%d\n", *fat16); // fat[0]=65535
+    */
     return 0;
 }
 
