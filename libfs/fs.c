@@ -150,8 +150,10 @@ int get_dirEntry_idx(const char * filename){
     int i;
     for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
     {
-        struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry);
-        if(strcmp(tmp->filename, filename) == 0){
+        // struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry);
+        struct RootDirEntry * tmp = get_dir(i);
+
+        if(strcmp(tmp->filename, filename) == 0)
             return i;
 
         // if(strcmp(dir[i]->filename, filename) == 0){
@@ -162,6 +164,7 @@ int get_dirEntry_idx(const char * filename){
         eprintf("get_firstEntry_idx: not found\n");
         return -1;
     }
+
     return -1;
 }
 
@@ -308,8 +311,8 @@ int fs_umount(void)
         sp = NULL;
     }
     if(root_dir){
-        free(dir);
-        dir = NULL;
+        free(root_dir);
+        root_dir = NULL;
     }
     if(fat)
     {
