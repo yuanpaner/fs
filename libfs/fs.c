@@ -634,7 +634,7 @@ int fs_lseek(int fd, size_t offset)
 {
 	/* TODO: Phase 3 */
     if(!is_valid_fd(fd)) return -1;
-    dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry)
+    dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
     if(offset > dir_entry->file_sz) return -1;
 
     filedes[fd]->offset = offset;
