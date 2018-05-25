@@ -76,9 +76,10 @@ struct RootDirEntry {                // Inode structure
     char        filename[FS_FILENAME_LEN];         // Whether or not inode is valid
     uint32_t    file_sz;          // Size of file
     uint16_t    first_data_blk; // Direct pointers
+    uint16_t    last_data_blk; // Direct pointers
     // uint8_t     frentry_idx;  //10 byte Unused/Padding
     uint8_t     open;
-    char        unused[2];     
+    char        unused[7];     
 }__attribute__((packed));
 
 struct FileDescriptor
@@ -152,10 +153,10 @@ int get_freeEntry_idx(const char * filename){
     }
     return i;
 }
-int get_freeFat_idx(){
+uint16_t get_freeFat_idx(){
     if(fat == NULL || sp == NULL)
         return -1;
-    int i = 1;
+    uint16_t i = 1;
     uint16_t * tmp;
     for (tmp = fat; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i, tmp += sizeof( uint16_t ))
         if (*tmp == 0 )
@@ -212,7 +213,12 @@ int erase_fat(uint16_t * id){ // recursion to erase
     return 0;
 }
 
-
+int file_blk_count(uint32_t sz){
+    int k = sz / BLOCK_SIZE;
+    if( k * BLOCK_SIZE < sz)
+        return k + 1;
+    else return k;
+}
 
 /* TODO: Phase 1 */
 
@@ -466,7 +472,7 @@ int fs_create(const char *filename)
         memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
         return -1; // unmount?
     }
-
+    dir_entry->last_data_blk = dir_entry->first_data_blk;
     // fat16 = fat + sizeof(uint16_t) * (dir_entry->first_data_blk);
     fat16 = get_fat(dir_entry->first_data_blk);
     *fat16 = 0xFFFF;
@@ -660,13 +666,49 @@ int fs_lseek(int fd, size_t offset)
  * Return: -1 if file descriptor @fd is invalid (out of bounds or not currently
  * open). Otherwise return the number of bytes actually written.
 
- This function attempts to write nbyte bytes of data to the file referenced by the descriptor fildes from the buffer pointed to by buf. The function assumes that the buffer buf holds at least nbyte bytes. When the function attempts to write past the end of the file, the file is automatically extended to hold the additional bytes. It is possible that the disk runs out of space while performing a write operation. In this case, the function attempts to write as many bytes as possible (i.e., to fill up the entire space that is left). The maximum file size is 16M (which is, 4,096 blocks, each 4K). Upon successful completion, the number of bytes that were actually written is returned. This number could be smaller than nbyte when the disk runs out of space (when writing to a full disk, the function returns zero). In case of failure, the function returns -1. It is a failure when the file descriptor fildes is not valid. The write function implicitly increments the file pointer by the number of bytes that were actually written.
-
  */
 int fs_write(int fd, void *buf, size_t count)
 {
 	/* TODO: Phase 4 */
-    return 0;
+    if(!is_valid_fd(fd)) return -1;
+    dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
+    if(dir_entry->unused[0] == 'w') return -1; // others are writing this file
+
+    int real_count = count;
+    int file_sz_old = dir_entry->file_sz;
+    int file_sz_new = file_sz_old + count;
+    int blk_old = file_blk_count(file_sz_old);
+    int blk_new = file_blk_count(file_sz_new);
+    uint16_t old_last = dir_entry->last_data_blk;
+    if(blk_old != blk_new){
+        //set up the blk; 
+        int blk_more = blk_new - blk_old;
+        
+        while(blk_more > 0){
+            int next = get_freeFat_idx();
+            if(next == -1) break; // no valid fat
+            dir_entry->last_data_blk = next;
+            blk_more -= 1;
+        }
+        if(blk_more != 0) // succeed to write all
+            //update real_count;
+            real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old;
+        *(get_fat(dir_entry->last_data_blk)) = 0xFFFF; 
+    }
+
+    //start to write 
+    //1. get remaining content in the old last blk
+    //2. cat the old and new real_count
+    //3. write the whole block
+
+    //write the old last blk specially
+    //write the other blocks as a whole
+    
+    int blk_more_real = blk_new - blk_old - blk_more;
+
+    dir_entry->unused[0] == 'n';
+
+    return real_count;
 }
 
 /**
