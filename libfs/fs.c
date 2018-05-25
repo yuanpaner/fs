@@ -316,7 +316,7 @@ int fs_info(void)
     // memset((dir[0]->filename), 0, FS_FILENAME_LEN * sizeof(char));
     for (int i = 0; i < FS_FILENAME_LEN; ++i)
     {
-        (dir[0]->filename)[i] = 0;
+        (dir[0]->filename)[i] = '\0';
     }
     eprintf("after memeset(0), root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
     // eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
