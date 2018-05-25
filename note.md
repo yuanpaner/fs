@@ -1,8 +1,9 @@
 ECS 150: Project #4 - File system
 
 - [ ] memory leak for phase 1
-- [ ] phase 1, FAT
-- [ ] fat_free_ratio=4095/4096 ? rdir_free_ratio=128/128 ?
+- [ ] group all the malloc and free in function
+- [X] phase 1, FAT
+- [X] fat_free_ratio=4095/4096 ? rdir_free_ratio=128/128 ?
 
 
 ## General Framework
@@ -24,28 +25,33 @@ Variadic  Macro
 https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html  
 Struct packed  
 https://stackoverflow.com/questions/11770451/what-is-the-meaning-of-attribute-packed-aligned4  
-https://www.geeksforgeeks.org/structure-member-alignment-padding-and-data-packing/
+https://www.geeksforgeeks.org/structure-member-alignment-padding-and-data-packing/  
 
 Integer
 https://www.gnu.org/software/libc/manual/html_node/Integers.html  
+
 FS  
 http://www.cs.cornell.edu/courses/cs4410/2010fa/CS4411/slides/project6/project6.pdf  
 https://gitlab.com/nd-cse-30341-fa17/cse-30341-fa17-project06  
+
 FAT / innode  
 http://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf
 http://www.tavi.co.uk/phobos/fat.html  
 https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system  
 https://www.pjrc.com/tech/8051/ide/fat32.html  
+http://www.c-jump.com/CIS24/Slides/FAT/lecture.html#F01_0010_overview  
+https://www.pjrc.com/tech/8051/ide/fat32.html  
 
 project  
 http://www.openvirtualization.org/documentation/fat32_8c_source.html  
-http://codeandlife.com/2012/04/07/simple-fat-and-sd-tutorial-part-2/  
+http://codeandlife.com/2012/04/07/simple-fat-and-sd-tutorial-part-2/   !!!
 
 links  
 https://www.edaboard.com/showthread.php?176568-C-code-for-FAT-file-implementation-using-PIC18F4550
   
 piazza 
 @453   
+```c
 fs_info() should print the entire output generate when you enter "./fs_ref.x info ...".
 The values you need to print are:
 total_blk_count = total number of blocks
@@ -54,7 +60,10 @@ rdir_blk = Index of root directory
 data_blk = Index of first data block in virtual disk
 data_blk_count = number of data blocks
 fat_free_ratio = Number of FAT entries available (free) / number of data blocks
-rdir_free_ratio = Number of root directory entries available (free) / size of root directory
+rdir_free_ratio = Number of root directory entries available (free) / size of root directory  
+```
+@421  
+Since the value 0 denotes that a FAT entry is available, the data block #0 can never be allocated to a file. That's why this data block is simply lost.  
 
 ## Source II 
 Virtual Filesystem (VFS) in Linux  

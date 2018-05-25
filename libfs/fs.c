@@ -3,9 +3,12 @@
 #include <stdlib.h>
 #include <string.h> // strcmp
 
+#include <stdbool.h>
 #include <stdint.h> //Integers
+
 #include "disk.h"
 #include "fs.h"
+
 
 
 //in header
@@ -40,7 +43,6 @@ Offset  Length (bytes)  Description
 0x0E    2   Amount of data blocks
 0x10    1   Number of blocks for FAT
 0x11    4079    Unused/Padding
-
 
 * FAT
 The FAT is a flat array, possibly spanning several blocks, which entries are composed of 16-bit unsigned words. There are as many entries as data blocks in the disk.
@@ -105,6 +107,11 @@ uint16_t * fat16 = NULL;
 int fd_cnt = 0; 
 struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
 
+bool is_valid_fd(int fd){
+    if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL) 
+        return false;
+    else return true;
+}
 
 int get_valid_fd(){
     if(filedes == NULL || fd_cnt >= FS_OPEN_MAX_COUNT) return -1;
@@ -355,6 +362,7 @@ int fs_umount(void)
         }
             
     }
+    fd_cnt = 0;
 
     // todo: close all the file descriptors
 
@@ -392,14 +400,8 @@ int fs_info(void)
     eprintf("root_dir[0].filename[0]=%d\n", (int)(dir_entry->filename[0])); // root_dir[0].filename=(null)
 
     memset(dir_entry, 0, sizeof(dir_entry->filename));
-    // for (int i = 0; i < FS_FILENAME_LEN; ++i)
-    // {
-    //     (dir[0]->filename)[i] = '\0';
-    // }
     eprintf("after memeset(0), root_dir[0].filename=%s\n", dir_entry->filename); // root_dir[0].filename=(null)
-    // eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
     eprintf("fat[0]=%d\n", *fat16); // fat[0]=65535
-    // eprintf("fat[1]=%d\n", (uint16_t)(fat+2));  
     return 0;
 }
 
@@ -581,7 +583,8 @@ int fs_open(const char *filename)
 int fs_close(int fd)
 {
 	/* TODO: Phase 3 */
-    if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL)  return -1;
+    // if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL)  return -1;
+    if(!is_valid_fd(fd)) return -1;
 
     ((struct RootDirEntry *)(filedes[fd]->file_entry))->open -= 1;
     free(filedes[fd]);
@@ -604,7 +607,10 @@ int fs_close(int fd)
 int fs_stat(int fd)
 {
 	/* TODO: Phase 3 */
-    return 0;
+    // if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL) 
+    if(!is_valid_fd(fd)) 
+        return -1;
+    return ((struct RootDirEntry *)(filedes[fd]->file_entry))->file_sz;
 }
 
 /**
@@ -623,13 +629,15 @@ int fs_stat(int fd)
 
  This function sets the file pointer (the offset used for read and write operations) associated with the file descriptor fildes to the argument offset. It is an error to set the file pointer beyond the end of the file. To append to a file, one can set the file pointer to the end of a file, for example, by calling fs_lseek(fd, fs_get_filesize(fd));. Upon successful completion, a value of 0 is returned. fs_lseek returns -1 on failure. It is a failure when the file descriptor fildes is invalid, when the requested offset is larger than the file size, or when offset is less than zero.
 
-
-
-
  */
 int fs_lseek(int fd, size_t offset)
 {
 	/* TODO: Phase 3 */
+    if(!is_valid_fd(fd)) return -1;
+    dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry)
+    if(offset > dir_entry->file_sz) return -1;
+
+    filedes[fd]->offset = offset;
     return 0;
 }
 
