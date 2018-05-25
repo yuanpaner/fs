@@ -336,8 +336,11 @@ int fs_umount(void)
 
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i)
     {
-        if(filedes[i] != NULL)
+        if(filedes[i] != NULL){
             free(filedes[i]);
+            filedes[i] = NULL;
+        }
+            
     }
 
     // todo: close all the file descriptors
