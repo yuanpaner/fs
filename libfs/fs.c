@@ -102,7 +102,7 @@ struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
 
 
 int get_valid_fd(){
-    if(filedes == NULL || fd >= FS_OPEN_MAX_COUNT) return -1;
+    if(filedes == NULL || fd_cnt >= FS_OPEN_MAX_COUNT) return -1;
     for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
         if(filedes[i] == NULL)
             return i;
