@@ -350,7 +350,7 @@ int fs_info(void)
     if(dir_entry->filename == NULL)
         eprintf("root_dir[0].filename == NULL!!!\n");
     else eprintf("root_dir[0].filename != NULL...\n");
-    eprintf("root_dir[0].filename=%s\n", dir_entry->filename); // root_dir[0].filename=(null)
+    eprintf("root_dir[0].filename[0]=%c\n", dir_entry->filename[0]); // root_dir[0].filename=(null)
 
     memset(dir_entry, 0, sizeof(dir_entry->filename));
     // for (int i = 0; i < FS_FILENAME_LEN; ++i)
