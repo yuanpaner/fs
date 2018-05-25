@@ -22,7 +22,7 @@
 
 // 需要一个global var存储the currently mounted file system.
 
-const static char FS_NAME[8] = "ECS150FS";
+// const static char FS_NAME[8] = "ECS150FS";
 
 #define eprintf(format, ...) \
     fprintf (stderr, format, ##__VA_ARGS__)
@@ -77,7 +77,8 @@ struct RootDirEntry {                // Inode structure
 
 struct FileDescriptor
 {
-    void * dir_entry;
+    void * file_entry;
+    uint32_t offset;
 };
 
 union Block {
@@ -97,7 +98,16 @@ void * fat = NULL;
 uint16_t * fat16 = NULL;
 
 int fd = 0; 
-struct FileDescriptor filedes[FS_OPEN_MAX_COUNT];
+struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
+
+
+int get_valid_fd(){
+    if(filedes == NULL || fd >= FS_OPEN_MAX_COUNT) return -1;
+    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+        if(filedes[i] == NULL)
+            return i;
+
+}
 
 struct RootDirEntry * get_dir(int id){
     if(root_dir == NULL) return NULL;
@@ -120,7 +130,7 @@ int get_freeEntry_idx(const char * filename){
             eprintf("fs_create: @filename already exists error\n");
             return -1;
         }
-        if(tmp->filename == NULL)
+        if(tmp->filename[0] == 0)
             break;
     }
     if(i == FS_FILE_MAX_COUNT){
@@ -234,8 +244,11 @@ int fs_mount(const char *diskname)
         }
     }
     fat16 = get_fat(0);
-    
 
+    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+        filedes[i] = NULL;
+    
+    fd = 0;
     // memcpy(sp->signature,FS_NAME,8);
     // sp->total_blk_count = block_disk_count();
     // sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
@@ -319,6 +332,12 @@ int fs_umount(void)
     {
         free(fat);
         fat = NULL;
+    }
+
+    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    {
+        if(filedes[i] != NULL)
+            fee(filedes[i]);
     }
 
     // todo: close all the file descriptors
@@ -500,16 +519,22 @@ int fs_ls(void)
 int fs_open(const char *filename)
 {
 	/* TODO: Phase 3 */
+    if(fd_cnt >= FS_OPEN_MAX_COUNT)
+        return -1;
+
     int entry_id = get_dirEntry_idx(filename);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
 
     dir_entry = get_dir(entry_id);
+    ++(dir_entry->open);
 
-    if(dir_entry->open >= FS_OPEN_MAX_COUNT)
-        return -1; 
+    int fd = get_validfd();
+    filedes[fd] = malloc(sizeof(struct FileDescriptor));
+    filedes[fd]->file_entry = dir_entry;
+    filedes[fd]->offset = 0;
 
-    int fd;
+    fd_cnt++;
 
     return fd;
 }
@@ -530,6 +555,12 @@ int fs_open(const char *filename)
 int fs_close(int fd)
 {
 	/* TODO: Phase 3 */
+    if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL)  return -1;
+
+    ((struct RootDirEntry *)(fildes[fd]->file_entry))->open -= 1;
+    free(filedes[fd]);
+    filedes[fd] = NULL;
+    
     return 0;
 }
 
