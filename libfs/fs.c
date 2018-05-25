@@ -107,6 +107,7 @@ int get_valid_fd(){
         if(filedes[i] == NULL)
             return i;
 
+    return -1;
 }
 
 struct RootDirEntry * get_dir(int id){
@@ -334,11 +335,11 @@ int fs_umount(void)
         fat = NULL;
     }
 
-    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
     {
         if(filedes[i] != NULL){
             free(filedes[i]);
-            filedes[i] = NULL;
+            filedes[i] = NULL; 
         }
             
     }
