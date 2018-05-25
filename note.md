@@ -60,6 +60,8 @@ http://www.linfo.org/mounting.html
 memcpy and strcpy  
 https://stackoverflow.com/questions/2898364/strcpy-vs-memcpy  
 
+align in C  
+https://wr.informatik.uni-hamburg.de/_media/teaching/wintersemester_2013_2014/epc-14-haase-svenhendrik-alignmentinc-paper.pdf  
 
 ## Else
 ```c

@@ -70,7 +70,8 @@ struct RootDirEntry {                // Inode structure
     uint32_t    file_sz;          // Size of file
     uint16_t    first_data_blk; // Direct pointers
     // uint8_t     frentry_idx;  //10 byte Unused/Padding
-    char        unused[10];     
+    uint8_t     open;
+    char        unused[2];     
 }__attribute__((packed));
 
 
@@ -87,8 +88,8 @@ struct RootDirEntry ** dir = NULL; // 32B * 128 entry
 uint16_t * fat = NULL;
 
 
-int get_direntry_idx(const char * filename){
-    if(dir == NULL)
+int get_freeEntry_idx(const char * filename){
+    if(dir == NULL || sp == NULL)
         return -1;
     int i;
     for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
@@ -107,7 +108,7 @@ int get_direntry_idx(const char * filename){
     }
     return i;
 }
-int get_freefat_idx(){
+int get_freeFat_idx(){
     if(fat == NULL || sp == NULL)
         return -1;
     int i = 1;
@@ -119,6 +120,40 @@ int get_freefat_idx(){
 
     return -1;
 
+}
+
+int get_dirEntry_idx(const char * filename){
+    if(filename == NULL || dir == NULL || sp == NULL)
+        return -1;
+    int i;
+    for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    {
+        /* code */
+        if(strcmp(dir[i]->filename, filename) == 0){
+            // oprintf("fs_create: @filename already exists error\n");
+            return i;
+        }
+    }
+    if(i == FS_FILE_MAX_COUNT){
+        eprintf("get_firstEntry_idx: not found\n");
+        return -1;
+    }
+    return -1;
+}
+
+int erase_fat(uint16_t id){
+    if(sp == NULL || dir == NULL)
+        return -1;
+
+    if(fat[id] == 0xFFFF){
+        fat[id] = 0;
+        return;
+    }
+
+    erase_fat(fat[id]);
+    fat[id] = 0;
+
+    return 0;
 }
 /* TODO: Phase 1 */
 
@@ -211,7 +246,7 @@ This means that whenever umount_fs is called, all meta-information and file data
 int fs_umount(void)
 {
     /* TODO: Phase 1 */
-	/* write back */
+	/* write back: super block, fat, dir*/
     if(block_write(0, (void *)sp) < 0)
     {
         eprintf("fs_umount write back sp error\n");
@@ -331,13 +366,13 @@ int fs_create(const char *filename)
     //     eprintf("fs_create: root directory full error\n");
     //     return -1;
     // }
-    int entry_id = get_direntry_idx(filename);
+    int entry_id = get_freeEntry_idx(filename);
     if(entry_id < 0)
-        return -1; // no valid dir entry
+        return -1; // no valid dir entry 
     // the ith entry is available
     strcpy(dir[entry_id]->filename, filename);
     dir[entry_id]->file_sz = 0;
-    dir[entry_id]->first_data_blk = get_freefat_idx(); // entry
+    dir[entry_id]->first_data_blk = get_freeFat_idx(); // entry
     if(dir[entry_id]->first_data_blk == -1)
         return -1;  // ? need unmounted?
     fat[dir[entry_id]->first_data_blk] = 0xFFFF;
@@ -355,12 +390,22 @@ int fs_create(const char *filename)
  * Return: -1 if @filename is invalid, if there is no file named @filename to
  * delete, or if file @filename is currently open. 0 otherwise.
 
- This function deletes the file with name name from the root directory of your file system and frees all data blocks and meta-information that correspond to that file. The file that is being deleted must not be open. That is, there cannot be any open file descriptor that refers to the file name. When the file is open at the time that fs_delete is called, the call fails and the file is not deleted. Upon successful completion, a value of 0 is returned. fs_delete returns -1 on failure. It is a failure when the file with name does not exist. It is also a failure when the file is currently open (i.e., there exists at least one open file descriptor that is associated with this file).
+ This function deletes the file with name from the root directory of your file system and frees all data blocks and meta-information that correspond to that file. The file that is being deleted must not be open. That is, there cannot be any open file descriptor that refers to the file name. When the file is open at the time that fs_delete is called, the call fails and the file is not deleted. Upon successful completion, a value of 0 is returned. fs_delete returns -1 on failure. It is a failure when the file with name does not exist. It is also a failure when the file is currently open (i.e., there exists at least one open file descriptor that is associated with this file).
 
  */
 int fs_delete(const char *filename)
 {
 	/* TODO: Phase 2 */
+    int entry_id = get_dirEntry_idx(filename);
+    if(entry_id < 0) return -1; // not found or sp, dir == NULL
+    // or if file @filename is currently open. 0 otherwise.
+    if(dir[entry_id]->open > 0)
+        return -1; // open
+
+    uint16_t first_data_blk =  dir[entry_id]->first_data_blk;
+    erase_fat(first_data_blk);
+    dir[entry_id]->filename = NULL;
+
     return 0;
 }
 
@@ -401,7 +446,15 @@ int fs_ls(void)
 int fs_open(const char *filename)
 {
 	/* TODO: Phase 3 */
-    return 0;
+    int entry_id = get_dirEntry_idx(filename);
+    if(entry_id < 0) return -1; // not found or sp, dir == NULL
+    // or if file @filename is currently open. 0 otherwise.
+    if(dir[entry_id]->open >= FS_OPEN_MAX_COUNT)
+        return -1; 
+
+    int fd;
+
+    return fd;
 }
 
 /**
