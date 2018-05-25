@@ -26,6 +26,8 @@ const static char FS_NAME[8] = "ECS150FS";
 
 #define eprintf(format, ...) \
     fprintf (stderr, format, ##__VA_ARGS__)
+#define oprintf(format, ...) \
+    fprintf (stdout, format, ##__VA_ARGS__)
 /* Superbock
 * Holds statistics about the filesystem 
 * according to the requirment 8 + 2 + 2 + 2 + 2 + 1 + 4079 = 4096; one block
@@ -207,13 +209,13 @@ int fs_umount(void)
 int fs_info(void)
 {
 	/* TODO: Phase 1 */
-    eprintf("FS Info:\n");
+    oprintf("FS Info:\n");
     eprintf("signature=%s\n",sp->signature);
-    eprintf("total_blk_count=%d\n",sp->total_blk_count);
-    eprintf("fat_blk_count=%d\n",sp->fat_blk_count);
-    eprintf("rdir_blk=%d\n",sp->rdir_blk);
-    eprintf("data_blk=%d\n",sp->data_blk);
-    eprintf("data_blk_count=%d\n",sp->data_blk_count);
+    oprintf("total_blk_count=%d\n",sp->total_blk_count);
+    oprintf("fat_blk_count=%d\n",sp->fat_blk_count);
+    oprintf("rdir_blk=%d\n",sp->rdir_blk);
+    oprintf("data_blk=%d\n",sp->data_blk);
+    oprintf("data_blk_count=%d\n",sp->data_blk_count);
 
     // my info
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
