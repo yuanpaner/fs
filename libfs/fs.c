@@ -52,6 +52,7 @@ Offset  Length (bytes)  Description
 0x14    2   Index of the first data block
 0x16    10  Unused/Padding
 */
+
 struct SuperBlock 
 {
 	// uint64_t signature; // 8 bytes, "ECS150FS"
@@ -90,24 +91,36 @@ union Block {
 
 char * disk = NULL;
 struct SuperBlock * sp = NULL;
-struct RootDirEntry ** dir = NULL; // 32B * 128 entry
-uint16_t * fat = NULL;
+void * root_dir = NULL;
+struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry
+void * fat = NULL;
+uint16_t * fat16 = NULL;
+
 int fd = 0; 
 struct FileDescriptor filedes[FS_OPEN_MAX_COUNT];
 
+struct RootDirEntry * get_dir(int id){
+    if(root_dir == NULL) return NULL;
+    return (struct RootDirEntry *)(root_dir + id * sizeof(struct RootDirEntry));
+}
+
+uint16_t * get_fat(int id){
+    if(fat == NULL) return NULL;
+    return (uint16_t *)(fat + sizeof(uint16_t) * id);
+}
 
 int get_freeEntry_idx(const char * filename){
-    if(dir == NULL || sp == NULL)
+    if(root_dir == NULL || sp == NULL)
         return -1;
     int i;
     for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
     {
-        /* code */
-        if(strcmp(dir[i]->filename, filename) == 0){
+        struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry);
+        if(strcmp(tmp->filename, filename) == 0){
             eprintf("fs_create: @filename already exists error\n");
             return -1;
         }
-        if(dir[i]->filename == NULL)
+        if(tmp->filename == NULL)
             break;
     }
     if(i == FS_FILE_MAX_COUNT){
@@ -120,8 +133,9 @@ int get_freeFat_idx(){
     if(fat == NULL || sp == NULL)
         return -1;
     int i = 1;
-    for (; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i)
-        if (fat[i] == 0 )
+    uint16_t * tmp;
+    for (tmp = fat; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i, tmp += sizeof( uint16_t ))
+        if (*tmp == 0 )
             return i;
     if( i == sp->fat_blk_count * BLOCK_SIZE / 2)
         eprintf("fat exhausted\n");
@@ -131,16 +145,18 @@ int get_freeFat_idx(){
 }
 
 int get_dirEntry_idx(const char * filename){
-    if(filename == NULL || dir == NULL || sp == NULL)
+    if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
     for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
     {
-        /* code */
-        if(strcmp(dir[i]->filename, filename) == 0){
-            // oprintf("fs_create: @filename already exists error\n");
+        struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry);
+        if(strcmp(tmp->filename, filename) == 0){
             return i;
-        }
+
+        // if(strcmp(dir[i]->filename, filename) == 0){
+        //     return i;
+        // }
     }
     if(i == FS_FILE_MAX_COUNT){
         eprintf("get_firstEntry_idx: not found\n");
@@ -149,20 +165,24 @@ int get_dirEntry_idx(const char * filename){
     return -1;
 }
 
-int erase_fat(uint16_t id){
-    if(sp == NULL || dir == NULL)
+int erase_fat(uint16_t * id){ // recursion to erase
+    if(sp == NULL || root_dir == NULL)
         return -1;
 
-    if(fat[id] == 0xFFFF){
-        fat[id] = 0;
-        return -1;
+    if(*id == 0xFFFF){
+        *id = 0;
+        return 0;
     }
 
-    erase_fat(fat[id]);
-    fat[id] = 0;
+    uint16_t * next = fat + sizeof(uint16_t) * (*id);
+    erase_fat(next);
+    *id = 0;
 
     return 0;
 }
+
+
+
 /* TODO: Phase 1 */
 
 /**
@@ -186,23 +206,26 @@ int fs_mount(const char *diskname)
 	if (block_disk_open(diskname) != 0) return -1;
 	
 
-    sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE);
+    sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
     memset(sp, 0, BLOCK_SIZE);
     if(block_read(0, (void *)sp) < 0) 
         return -1;
 
-    dir = malloc(BLOCK_SIZE);
-    memset(dir, 0, BLOCK_SIZE);
-    if(block_read(sp->rdir_blk, (void*)dir) < 0){
+    root_dir = malloc(BLOCK_SIZE);
+    memset(root_dir, 0, BLOCK_SIZE);
+    if(block_read(sp->rdir_blk, root_dir) < 0){
         eprintf("fs_mount read root dir error\n");
         return -1;
     }
+    // dir_entry = (struct RootDirEntry *)root_dir;
+    dir_entry = get_dir(0);
+
 
     fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
     memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
     for (int i = 0; i < sp->fat_blk_count; ++i)
     {
-        if(block_read(i+1, ((void*)fat) + BLOCK_SIZE * i) < 0){
+        if(block_read(i+1, fat + BLOCK_SIZE * i) < 0){
             eprintf("fs_mount read %d th(from 1) fat block error\n", i);
             return -1;
         }
@@ -260,14 +283,14 @@ int fs_umount(void)
         eprintf("fs_umount write back sp error\n");
         return -1; 
     }
-    if(block_write(sp->rdir_blk, (void *)dir) < 0)// write back
+    if(block_write(sp->rdir_blk, dir) < 0)// write back
     {
         eprintf("fs_umount write back dir error\n");
         return -1; 
     }
     for (int i = 0; i < sp->fat_blk_count; ++i)
     {
-        if(block_write(1 + i, (void *)fat + BLOCK_SIZE * i) < 0)// write back
+        if(block_write(1 + i, fat + BLOCK_SIZE * i) < 0)// write back
         {
             eprintf("fs_umount write back dir error\n");
             return -1; 
@@ -284,7 +307,7 @@ int fs_umount(void)
         free(sp);
         sp = NULL;
     }
-    if(dir){
+    if(root_dir){
         free(dir);
         dir = NULL;
     }
@@ -319,17 +342,18 @@ int fs_info(void)
 
     // my info
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
-    eprintf("root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
 
-    memset((dir[0]->filename), 0, sizeof(dir[0]->filename));
+    eprintf("root_dir[0].filename=%s\n", dir_entry->filename); // root_dir[0].filename=(null)
+
+    memset(dir_entry, 0, sizeof(dir_entry->filename));
     // for (int i = 0; i < FS_FILENAME_LEN; ++i)
     // {
     //     (dir[0]->filename)[i] = '\0';
     // }
-    eprintf("after memeset(0), root_dir[0].filename=%s\n", dir[0]->filename); // root_dir[0].filename=(null)
+    eprintf("after memeset(0), root_dir[0].filename=%s\n", dir_entry->filename); // root_dir[0].filename=(null)
     // eprintf("root_dir[0].unused=%s\n", dir[0]->unused); 
-    eprintf("fat[0]=%d\n", (uint16_t)fat[0]); // fat[0]=65535
-    eprintf("fat[1]=%d\n", (uint16_t)fat[1]); // fat[0]=65535
+    eprintf("fat[0]=%d\n", (uint16_t)fat); // fat[0]=65535
+    eprintf("fat[1]=%d\n", (uint16_t)(fat+2));  
     return 0;
 }
 
@@ -353,7 +377,7 @@ int fs_info(void)
 int fs_create(const char *filename)
 {
     /* TODO: Phase 2 */
-    if(sp == NULL || dir == NULL){
+    if(sp == NULL || root_dir == NULL){
         eprintf("fs_create: no vd mounted or root dir read\n");
         return -1;
     }
@@ -385,12 +409,17 @@ int fs_create(const char *filename)
     if(entry_id < 0)
         return -1; // no valid dir entry 
     // the ith entry is available
-    strcpy(dir[entry_id]->filename, filename);
-    dir[entry_id]->file_sz = 0;
-    dir[entry_id]->first_data_blk = get_freeFat_idx(); // entry
-    if(dir[entry_id]->first_data_blk == -1)
+    // dir_entry = root_dir + entry_id * sizeof(struct RootDirEntry);
+    dir_entry = get_dir(entry_id);
+    strcpy(dir_entry->filename, filename);
+    dir_entry->file_sz = 0;
+    dir_entry->first_data_blk = get_freeFat_idx(); // entry
+    if(dir_entry->first_data_blk == -1)
         return -1;  // ? need unmounted?
-    fat[dir[entry_id]->first_data_blk] = 0xFFFF;
+
+    // fat16 = fat + sizeof(uint16_t) * (dir_entry->first_data_blk);
+    fat16 = get_fat(dir_entry->first_data_blk);
+    *fat16 = 0xFFFF;
 
     return 0;
 }
@@ -414,12 +443,15 @@ int fs_delete(const char *filename)
     int entry_id = get_dirEntry_idx(filename);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
-    if(dir[entry_id]->open > 0)
+
+    struct RootDirEntry * cur_entry = root_dir + sizeof(struct RootDirEntry) * entry_id;
+    // if(dir[entry_id]->open > 0)
+    if(cur_entry->open > 0)
         return -1; // open
 
-    uint16_t first_data_blk =  dir[entry_id]->first_data_blk;
-    erase_fat(first_data_blk);
-    memset(dir[entry_id], 0, FS_FILENAME_LEN); // error: dir[entry_id]->filename = NULL;
+    fat16 =  get_fat(cur_entry->first_data_blk);
+    erase_fat(fat16);
+    memset(cur_entry->filename, 0, FS_FILENAME_LEN); // error: dir[entry_id]->filename = NULL;
 
     return 0;
 }
@@ -464,7 +496,10 @@ int fs_open(const char *filename)
     int entry_id = get_dirEntry_idx(filename);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
-    if(dir[entry_id]->open >= FS_OPEN_MAX_COUNT)
+
+    dir_entry = get_dir(entry_id);
+
+    if(dir_entry->open >= FS_OPEN_MAX_COUNT)
         return -1; 
 
     int fd;
