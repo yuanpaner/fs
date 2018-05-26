@@ -680,7 +680,7 @@ int fs_write(int fd, void *buf, size_t count)
     int file_sz_new = file_sz_old + count;
     int blk_old = file_blk_count(file_sz_old);
     int blk_new = file_blk_count(file_sz_new);
-    uint16_t old_last = dir_entry->last_data_blk;
+    // uint16_t old_last = dir_entry->last_data_blk;
     int blk_more = blk_new - blk_old;
 
     if(blk_old != blk_new){
