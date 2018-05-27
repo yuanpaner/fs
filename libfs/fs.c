@@ -635,7 +635,9 @@ int fs_close(int fd)
     // if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL)  return -1;
     if(!is_valid_fd(fd)) return -1;
 
-    ((struct RootDirEntry *)(filedes[fd]->file_entry))->open -= 1;
+    dir_entry = fildes[fd]->file_entry;
+    dir_entry->open -= 1;
+
     free(filedes[fd]);
     filedes[fd] = NULL;
 
@@ -832,11 +834,37 @@ int fs_write(int fd, void *buf, size_t count)
 
  This function attempts to read nbyte bytes of data from the file referenced by the descriptor fildes into the buffer pointed to by buf. The function assumes that the buffer buf is large enough to hold at least nbyte bytes. When the function attempts to read past the end of the file, it reads all bytes until the end of the file. Upon successful completion, the number of bytes that were actually read is returned. This number could be smaller than nbyte when attempting to read past the end of the file (when trying to read while the file pointer is at the end of the file, the function returns zero). In case of failure, the function returns -1. It is a failure when the file descriptor fildes is not valid. The read function implicitly increments the file pointer by the number of bytes that were actually read.
 
-
+ int block_read(size_t block, void *buf);
  */
 int fs_read(int fd, void *buf, size_t count)
 {
 	/* TODO: Phase 4 */
-    return 0;
+    if(!is_valid_fd(fd)) return -1;
+    dir_entry = filedes[fd]->file_entry;
+
+    size_t real_count = clamp(dir_entry->file_sz, count);
+    void *bounce_buffer = malloc(BLOCK_SIZE);
+    int i = 0;
+    uint16_t temp_blk_id = dir_entry->first_data_blk; 
+    while(count > 0){
+        if(count >= BLOCK_SIZE){
+            if(block_read(temp_blk_id + sp->first_data_blk, buf + i) < 0 ) return -1;
+            i += BLOCK_SIZE;
+        }
+        else{
+            memeset(bounce_buffer, 0, BLOCK_SIZE);
+            if(block_read(temp_blk_id + sp->first_data_blk, bounce_buffer) < 0 ) return -1;
+            memcpy(buf+i, bounce_buffer, count);
+        }
+
+        temp_blk_id = *(get_fat(temp_blk_id));
+        count -= BLOCK_SIZE;
+    }
+
+    free(bounce_buffer);
+
+    if(fs_lseek(fd, real_count) < 0) return -1;
+ 
+    return real_count;
 }
 
