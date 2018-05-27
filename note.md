@@ -90,6 +90,13 @@ struct stat, and fstat
 http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html  
 http://pubs.opengroup.org/onlinepubs/009695399/functions/fstat.html
 
+bash, shell  
+https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html  
+BASH_SOURCE[0]
+https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source  
+http://www.tutorialspoint.com/unix/unix-special-variables.htm  
+
+
 ## Test output
 ```c
 int main(int argc, char **argv)

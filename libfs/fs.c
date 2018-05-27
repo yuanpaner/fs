@@ -221,13 +221,13 @@ int erase_fat(uint16_t * id){ // recursion to erase
 
     if(*id == 0xFFFF){
         *id = 0;
-        sp->fat_used -= 1;
+        // sp->fat_used -= 1;
         return 0;
     }
 
     uint16_t * next = fat + sizeof(uint16_t) * (*id);
     erase_fat(next);
-    sp->fat_used -= 1;
+    // sp->fat_used -= 1;
     *id = 0;
 
     return 0;
@@ -527,8 +527,8 @@ int fs_create(const char *filename)
     fat16 = get_fat(dir_entry->first_data_blk);
     *fat16 = 0xFFFF;
 
-    sp->fat_used += 1;
-    sp->rdir_used += 1;
+    // sp->fat_used += 1;
+    // sp->rdir_used += 1;
 
     return 0;
 }
@@ -767,7 +767,7 @@ int fs_write(int fd, void *buf, size_t count)
             *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
-            sp->fat_used += 1;
+            // sp->fat_used += 1;
         }
         if(blk_more != 0) // succeed to write all
             //update real_count;
