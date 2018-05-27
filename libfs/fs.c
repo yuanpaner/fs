@@ -726,7 +726,7 @@ int fs_write(int fd, void *buf, size_t count)
             *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
-            sp->fat_used -= 1;
+            sp->fat_used += 1;
         }
         if(blk_more != 0) // succeed to write all
             //update real_count;
