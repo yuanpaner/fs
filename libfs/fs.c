@@ -276,9 +276,14 @@ void sp_setup(){
     {
         if(dir_entry->filename[0] != 0){
             sp->rdir_used += 1;
-            sp->fat_used += dir_entry->file_sz / BLOCK_SIZE;
+            int tmp = dir_entry->file_sz / BLOCK_SIZE;
+            if(tmp * BLOCK_SIZE < dir_entry->file_sz)
+                tmp += 1;
+            sp->fat_used += tmp;
         }
     }
+    if(sp->fat_used == 0)
+        sp->fat_used = 1;
 }
 int fs_mount(const char *diskname)
 {
