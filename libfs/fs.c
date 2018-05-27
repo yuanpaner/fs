@@ -272,6 +272,8 @@ void sp_setup(){
     // if(sp->fat_used != 0 && sp->rdir_used != 0)
     //     return ;
     dir_entry = root_dir;
+    sp->fat_used = 0;
+    sp->rdir_used = 0;
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
     {
         if(dir_entry->filename[0] != 0){
