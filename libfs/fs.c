@@ -266,6 +266,20 @@ uint16_t id_to_real_blk(int i){
 With the mount operation, a file system becomes "ready for use." 
 You need to open the disk and then load the meta-information that is necessary to handle the file system operations that are discussed below. 
  */
+void sp_setup(){
+    if(sp == NULL || root_dir == NULL)
+        return ;
+    if(sp->fat_used != 0 && sp->rdir_used != 0)
+        return ;
+    dir_entry = root_dir;
+    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
+    {
+        if(dir_entry->filename[0] != 0){
+            sp->rdir_used += 1;
+            sp->fat_used += dir_entry->file_sz / BLOCK_SIZE;
+        }
+    }
+}
 int fs_mount(const char *diskname)
 {
 	/* TODO: Phase 1 */
@@ -276,8 +290,9 @@ int fs_mount(const char *diskname)
     memset(sp, 0, BLOCK_SIZE);
     if(block_read(0, (void *)sp) < 0) 
         return -1;
-    if(sp->fat_used == 0)
-        sp->fat_used = 1;
+    // if(sp->fat_used == 0)
+    //     sp->fat_used = 1;
+    sp_setup();
 
     root_dir = malloc(BLOCK_SIZE);
     memset(root_dir, 0, BLOCK_SIZE);
