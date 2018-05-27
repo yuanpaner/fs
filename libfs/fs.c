@@ -292,7 +292,7 @@ int fs_mount(const char *diskname)
         return -1;
     // if(sp->fat_used == 0)
     //     sp->fat_used = 1;
-    sp_setup();
+    // sp_setup();
 
     root_dir = malloc(BLOCK_SIZE);
     memset(root_dir, 0, BLOCK_SIZE);
@@ -302,7 +302,7 @@ int fs_mount(const char *diskname)
     }
     // dir_entry = (struct RootDirEntry *)root_dir;
     dir_entry = get_dir(0);
-
+    sp_setup();
 
     fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
     memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
