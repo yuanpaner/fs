@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // strcmp
+#include <string.h> // strcmp, strlen, strcpy
 
 #include <stdbool.h>
 #include <stdint.h> //Integers
@@ -31,6 +31,7 @@
     fprintf (stderr, format, ##__VA_ARGS__)
 #define oprintf(format, ...) \
     fprintf (stdout, format, ##__VA_ARGS__)
+#define clamp(x, y) (((x) <= (y)) ? (x) : (y))
 /* Superbock
 * Holds statistics about the filesystem 
 * according to the requirment 8 + 2 + 2 + 2 + 2 + 1 + 4079 = 4096; one block
@@ -65,8 +66,8 @@ struct SuperBlock
 	uint16_t data_blk_count;   // Amount of data blocks
     uint8_t  fat_blk_count;    // Number of blocks for FAT
 
-    uint16_t  fat_used;    // Number of blocks for FAT
-	uint16_t  rdir_used;    // Number of blocks for FAT
+    uint16_t  fat_used;    
+	uint16_t  rdir_used;    
 
     char     unused[4063];     // 4079 Unused/Padding, I use 32bits
 }__attribute__((packed));
@@ -98,22 +99,24 @@ union Block {
 
 
 
-char * disk = NULL;
-struct SuperBlock * sp = NULL;
-void * root_dir = NULL;
-struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry
-void * fat = NULL;
-uint16_t * fat16 = NULL;
+char * disk = NULL; //virtual disk name pointer
+struct SuperBlock * sp = NULL;  // superblock pointer
+void * root_dir = NULL;         // root directory pointer
+struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
+void * fat = NULL;              //FAT block pointer
+uint16_t * fat16 = NULL;        //fat array entry pointer
 
-int fd_cnt = 0; 
+int fd_cnt = 0;     // fd used number
 struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
 
+/* used to check the validation of the input file descirptor number */
 bool is_valid_fd(int fd){
     if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL) 
         return false;
     else return true;
 }
 
+/* get valid file descirptor number */
 int get_valid_fd(){
     if(filedes == NULL || fd_cnt >= FS_OPEN_MAX_COUNT) return -1;
     for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
@@ -123,16 +126,24 @@ int get_valid_fd(){
     return -1;
 }
 
+/* get file directory entry pointer according to id */
 struct RootDirEntry * get_dir(int id){
     if(root_dir == NULL) return NULL;
     return (struct RootDirEntry *)(root_dir + id * sizeof(struct RootDirEntry));
 }
 
+/* get file directory entry pointer according to block id */
 uint16_t * get_fat(int id){
     if(fat == NULL) return NULL;
+    if(id < 0 || id >= sp->data_blk_count) return NULL; // out of boundary
+
     return (uint16_t *)(fat + sizeof(uint16_t) * id);
 }
 
+
+/* get next free file directory entry id;
+ * check the duplicated existed filename
+ */
 int get_freeEntry_idx(const char * filename){
     if(root_dir == NULL || sp == NULL)
         return -1;
@@ -153,21 +164,30 @@ int get_freeEntry_idx(const char * filename){
     }
     return i;
 }
+
+/* get next free fat entry id */
 uint16_t get_freeFat_idx(){
     if(fat == NULL || sp == NULL)
         return -1;
+    if(sp->data_blk_count - sp->fat_used == 0) {
+        eprintf("fat exhausted\n");
+        return -1;
+    }       
+
     uint16_t i = 1;
-    uint16_t * tmp;
-    for (tmp = fat; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i, tmp += sizeof( uint16_t ))
+    uint16_t * tmp = fat;
+    tmp++; // skip #0 fat
+    // for (tmp = fat; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i, tmp += sizeof( uint16_t ))
+    for (; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i, tmp++)
         if (*tmp == 0 )
             return i;
     if( i == sp->fat_blk_count * BLOCK_SIZE / 2)
         eprintf("fat exhausted\n");
 
     return -1;
-
 }
 
+/* get the dir entry id by filename*/
 int get_dirEntry_idx(const char * filename){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
@@ -213,12 +233,19 @@ int erase_fat(uint16_t * id){ // recursion to erase
     return 0;
 }
 
+/* calculate how many blocks needed for a file of size @sz */
 int file_blk_count(uint32_t sz){
     int k = sz / BLOCK_SIZE;
     if( k * BLOCK_SIZE < sz)
         return k + 1;
     else return k;
 }
+
+uint16_t id_to_real_blk(int i){
+    // if sp == NULL || root_dir == NULL;
+    return i + sp->data_blk;
+}
+
 
 /* TODO: Phase 1 */
 
@@ -667,20 +694,27 @@ int fs_lseek(int fd, size_t offset)
  * Return: -1 if file descriptor @fd is invalid (out of bounds or not currently
  * open). Otherwise return the number of bytes actually written.
 
+ √ calculate the real count written
+ √ set up the FAT index (should after written success )
+ √ write the content
+ [] update file entry(should after written success)
  */
 int fs_write(int fd, void *buf, size_t count)
 {
 	/* TODO: Phase 4 */
     if(!is_valid_fd(fd)) return -1;
+
     dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
     if(dir_entry->unused[0] == 'w') return -1; // others are writing this file
 
     int real_count = count;
     int file_sz_old = dir_entry->file_sz;
     int file_sz_new = file_sz_old + count;
-    int blk_old = file_blk_count(file_sz_old);
+    int blk_old = file_blk_count(file_sz_old); // block count needed
     int blk_new = file_blk_count(file_sz_new);
-    // uint16_t old_last = dir_entry->last_data_blk;
+
+    uint16_t old_last = dir_entry->last_data_blk;
+
     int blk_more = blk_new - blk_old;
 
     if(blk_old != blk_new){
@@ -688,8 +722,11 @@ int fs_write(int fd, void *buf, size_t count)
         while(blk_more > 0){
             int next = get_freeFat_idx();
             if(next == -1) break; // no valid fat
+
+            *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
+            sp->fat_used -= 1;
         }
         if(blk_more != 0) // succeed to write all
             //update real_count;
@@ -718,7 +755,41 @@ int fs_write(int fd, void *buf, size_t count)
     // }
     //     truncate += real_count;
 
+    // int block_write(size_t block, const void *buf), block start from 0
+
+    void * bounce_buffer = malloc(BLOCK_SIZE);
+    memset(bounce_buffer, 0, BLOCK_SIZE);
+
+    if(block_read(sp->old_last + old_last, bounce_buffer) < 0) return -1; // should free bounce_buffer before return -1
+    size_t truncate = strlen(bounce_buffer); // or should I use truncate = dir_entry->file_sz % BLOCK_SIZE
+    size_t buf_idx = clamp(BLOCK_SIZE - truncate, real_count);
+    memcpy(bounce_buffer + truncate, buf, buf_idx);
+    if(block_write(sp->data_blk + old_last, bounce_buffer) < 0 ) return -1; 
+
+    int temp_count = real_count;
+    temp_count -= buf_idx;
+    int temp_blk_id = *(get_fat(old_last));     
+    while(temp_count > 0){ // into the loop, temp_blk_id != 0xFFFF       
+        // truncate = clamp(temp_count, BLOCK_SIZE);//reuse the var truncate 
+        if(temp_count > BLOCK_SIZE)
+            block_write(sp->data_blk + temp_blk_id, buf + buf_idx); // < 0 should return -1;
+        else {
+            memset(bounce_buffer, 0, BLOCK_SIZE);
+            memcpy(bounce_buffer, buf + buf_idx, temp_count);
+            block_write();
+        }
+
+        buf_idx += BLOCK_SIZE;
+        temp_count -= BLOCK_SIZE;
+        temp_blk_id = *(get_fat(temp_blk_id));
+    }
+
+
+    free(bounce_buffer);
+
     dir_entry->unused[0] = 'n';
+
+    dir_entry->file_sz += real_count;
 
     return real_count;
 }
