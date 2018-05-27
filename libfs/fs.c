@@ -760,7 +760,7 @@ int fs_write(int fd, void *buf, size_t count)
     void * bounce_buffer = malloc(BLOCK_SIZE);
     memset(bounce_buffer, 0, BLOCK_SIZE);
 
-    if(block_read(sp->old_last + old_last, bounce_buffer) < 0) return -1; // should free bounce_buffer before return -1
+    if(block_read(sp->data_blk + old_last, bounce_buffer) < 0) return -1; // should free bounce_buffer before return -1
     size_t truncate = strlen(bounce_buffer); // or should I use truncate = dir_entry->file_sz % BLOCK_SIZE
     size_t buf_idx = clamp(BLOCK_SIZE - truncate, real_count);
     memcpy(bounce_buffer + truncate, buf, buf_idx);
@@ -776,7 +776,7 @@ int fs_write(int fd, void *buf, size_t count)
         else {
             memset(bounce_buffer, 0, BLOCK_SIZE);
             memcpy(bounce_buffer, buf + buf_idx, temp_count);
-            block_write();
+            block_write(sp->data_blk + temp_blk_id, bounce_buffer);
         }
 
         buf_idx += BLOCK_SIZE;
