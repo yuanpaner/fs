@@ -553,7 +553,22 @@ int fs_delete(const char *filename)
  */
 int fs_ls(void)
 {
-	/* TODO: Phase 2 */
+	/* TODO: Phase 2 
+    FS Ls:
+    file: tmp_argv.c, size: 2038, data_blk: 1
+    */
+    oprintf("FS Ls:\n");
+    if(root_dir != NULL && sp != NULL){
+        dir_entry = get_dir(0);
+        for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
+        {
+            // dir_entry = get_dir(i);
+            if((dir_entry->filename)[0] != 0){
+                eprintf("file: %s, size: %d, data_blk: %d\n", dir_entry->filename, dir_entry->file_sz, dir_entry->first_data_blk);
+            }
+        }
+    }
+
     return 0;
 }
 
