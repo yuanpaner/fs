@@ -269,8 +269,8 @@ You need to open the disk and then load the meta-information that is necessary t
 void sp_setup(){
     if(sp == NULL || root_dir == NULL)
         return ;
-    if(sp->fat_used != 0 && sp->rdir_used != 0)
-        return ;
+    // if(sp->fat_used != 0 && sp->rdir_used != 0)
+    //     return ;
     dir_entry = root_dir;
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
     {
