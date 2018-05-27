@@ -109,3 +109,68 @@ argc = 1 ./tmp_argv
 $ ./tmp_argv 123 456
 argc = 3
 ```
+
+
+```c 
+// fs_ref.x
+$fs_ref.x info disk
+FS Info:
+total_blk_count=1003
+fat_blk_count=1
+rdir_blk=2
+data_blk=3
+data_blk_count=1000
+fat_free_ratio=999/1000
+rdir_free_ratio=128/128
+
+$fs_ref.x add disk Makefile
+Wrote file 'Makefile' (1434/1434 bytes)
+
+$fs_ref.x add disk fun.sh
+open: No such file or directory
+
+$fs_ref.x add disk test_fs.d
+Wrote file 'test_fs.d' (35/35 bytes)
+
+$fs_ref.x add disk run.sh
+Wrote file 'run.sh' (117/117 bytes)
+
+$fs_ref.x info disk
+FS Info:
+total_blk_count=1003
+fat_blk_count=1
+rdir_blk=2
+data_blk=3
+data_blk_count=1000
+fat_free_ratio=996/1000
+rdir_free_ratio=125/128
+
+$fs_ref.x ls disk
+FS Ls:
+file: Makefile, size: 1434, data_blk: 1
+file: test_fs.d, size: 35, data_blk: 2
+file: run.sh, size: 117, data_blk: 3
+$fs_ref.x stat disk Makefile
+Size of file 'Makefile' is 1434 bytes
+
+$fs_ref.x rm disk Makefile
+Removed file 'Makefile'
+
+$fs_ref.x info disk
+FS Info:
+total_blk_count=1003
+fat_blk_count=1
+rdir_blk=2
+data_blk=3
+data_blk_count=1000
+fat_free_ratio=997/1000
+rdir_free_ratio=126/128
+
+$fs_ref.x ls disk 
+FS Ls:
+file: test_fs.d, size: 35, data_blk: 2
+file: run.sh, size: 117, data_blk: 3
+```
+
+
+
