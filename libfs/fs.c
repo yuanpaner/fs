@@ -659,7 +659,9 @@ int fs_stat(int fd)
     // if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL) 
     if(!is_valid_fd(fd)) 
         return -1;
-    return ((struct RootDirEntry *)(filedes[fd]->file_entry))->file_sz;
+    //Size of file 'tmp_argv.c' is 2038 bytes
+    dir_entry = filedes[fd]->file_entry;
+    return dir_entry->file_sz;
 }
 
 /**
