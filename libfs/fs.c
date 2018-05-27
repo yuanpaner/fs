@@ -235,6 +235,8 @@ int erase_fat(uint16_t * id){ // recursion to erase
 
 /* calculate how many blocks needed for a file of size @sz */
 int file_blk_count(uint32_t sz){
+    if(sz == 0) return 1;
+    
     int k = sz / BLOCK_SIZE;
     if( k * BLOCK_SIZE < sz)
         return k + 1;
@@ -802,7 +804,6 @@ int fs_write(int fd, void *buf, size_t count)
         temp_count -= BLOCK_SIZE;
         temp_blk_id = *(get_fat(temp_blk_id));
     }
-
 
     free(bounce_buffer);
 
