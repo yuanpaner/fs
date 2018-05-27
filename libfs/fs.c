@@ -272,7 +272,7 @@ void sp_setup(){
     // if(sp->fat_used != 0 && sp->rdir_used != 0)
     //     return ;
     dir_entry = root_dir;
-    sp->fat_used = 0;
+    sp->fat_used = 1;
     sp->rdir_used = 0;
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
     {
@@ -284,8 +284,8 @@ void sp_setup(){
             sp->fat_used += tmp;
         }
     }
-    if(sp->fat_used == 0)
-        sp->fat_used = 1;
+    // if(sp->fat_used == 0)
+    //     sp->fat_used = 1;
 }
 int fs_mount(const char *diskname)
 {
