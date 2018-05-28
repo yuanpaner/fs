@@ -244,11 +244,11 @@ run_fs_xM_create() {
     # run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
 
     # add file-1M, test ls
-    run_test ./test_fs.x ls test.fs
-    # run_test ./fs_ref.x ls test.fs
+    # run_test ./test_fs.x ls test.fs
+    run_test ./fs_ref.x ls test.fs
 
     local line_array=()
-    line_array+=("$(select_line "${STDOUT}" "1")")
+    line_array+=("$(select_line "${STDOUT}" "2")")
     local corr_array=()
     corr_array+=("file: test-file-1M, size: 1048576, data_blk: 1")
 
@@ -291,7 +291,8 @@ run_fs_xM_create() {
     corr_array=()
     run_tool timeout 2 ./test_fs.x rm test.fs test-file-1M
     run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
-    run_test ./test_fs.x ls test.fs
+    # run_test ./test_fs.x ls test.fs
+    run_test ./fs_ref.x ls test.fs
 
     line_array+=("$(select_line "${STDOUT}" "2")")
     corr_array+=("file: test-file-2M, size: 1224704, data_blk: 1") # Wrote file 'test-file-5' (1224704/2097152 bytes)
