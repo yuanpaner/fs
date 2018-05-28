@@ -1,18 +1,18 @@
 ECS 150: Project #4 - File system
 
-感觉我的write没必要一开始计算offset啊，因为create之后就立马会write，总是从0开始的。。。我为什么要这么搞？  
-
-可以open好几次？在不同的地方读写。每次读写都会移动相同的offset还是。听老师上课的意思互相独立那就是各有各的offset，读ok，写怎么办。各有各的offset，但是在文件本身，设置一个open的检查。不能同时write。每次都是从末尾写么，会不会从中间写。  
+感觉我的write没必要一开始计算offset啊，因为create之后就立马会write，总是从0开始的。。。我为什么要这么搞？  有没有可能我可以对一个file write很多次，例如append这种，从结尾开始。我的code已经具备这个功能，但是需要一个合适的test。  
+  
+可以open好几次？在不同的地方读写？ 每次读写都会移动相同的offset还是。听老师上课的意思互相独立那就是各有各的offset.  
+如果不是用dup2这种，那就是independent fd。  
+读ok，缺功能， 每个文件都从不同的地方读。  
+写怎么办。我在csif上测试的结果是，写的时候会报提醒！在文件本身，设置一个open的检查。不能同时write。每次都是从末尾写么，会不会从中间写。功能已有，缺test检查。  
 
 Read 也一样，会不会有fd1在write，fd2在read，并且同时进行，那么就要用事实更新的file_sz  
+见test  
 
 w_dir_entry->first_data_blk == 0xFFFF 说明block的个数怎么都不会是0xFFFF个对吧。power(2, 16) * 4K
 
-- [ ] memory leak for phase 1
-- [ ] group all the malloc and free in function
-- [X] phase 1, FAT
-- [X] fat_free_ratio=4095/4096 ? rdir_free_ratio=128/128 ?
-- [X] don't assign block in @fs_create, in case the file is empty. 
+
 
 ## General Framework
 
@@ -128,24 +128,60 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 
 
 ## Test output
+- [X] info, ls
+- [ ] what is script  
+piazza 
+
+- [ ] read with cat
+- [ ] read with offset? multiple read? Each has an independent offset.   
+- [ ] read when writing
+So I need to update the file_sz very carefully.  
+
+- [ ] what file name we use  
+For example, if I add a file ../filename to the test.fs. Should I add it as "filename" or as "../filename" directly?  
+
 - [X] write one small file
 - [X] write one large file
-- [ ] write one large file out of boundary
+- [X] write one large file out of boundary
 - [ ] write several small files
+- [ ] write lots of small files, out of the range of directory entry - FS_FILE_MAX_COUNT
+- [ ] write several median files out of block boundary
+
 - [ ] write several large files
-- [ ] write several large files out of boundary
+- [ ] write several large files out of boundary 
+
+- [ ] write to same files, multiple writes?
+need using new c file to test  
+the csif prompt when I try to edit one file simoutaneously:  
+(1) Another program may be editing the same file.  If this is the case,
+    be careful not to end up with two different instances of the same
+    file when making changes.  Quit, or continue with caution.
+(2) An edit session for this file crashed.
+    If this is the case, use ":recover" or "vim -r run.sh"
+    to recover the changes (see ":help recovery").
+    If you did this already, delete the swap file ".run.sh.swp"
+    to avoid this message.  
+It's ok if I use `vim -R` to open a file(Readonly) simoutaneously. 
+
+- [ ] add a "clean" to the test, remove all the files in the virtual disk
 
 
-- [ ] write to same files  
-need using new c file to test 
 
 - [X] write to full disk  
+one directory entry used, no block assigned 
 √ data blk exhausted  
 √ Segmentation fault (core dumped)  
-- [X] remove regular file
-- [X] remove empty file
 
+
+- [X] remove regular file  
+- [X] remove empty file  
 - [ ] remove file which is opened by others????
+
+- [ ] memory leak for phase 1
+- [ ] group all the malloc and free in function
+- [X] phase 1, FAT
+- [X] fat_free_ratio=4095/4096 ? rdir_free_ratio=128/128 ?
+- [X] don't assign block in @fs_create, in case the file is empty. 
 
 ```c
 $ fs_ref.x add disk run.sh
