@@ -187,5 +187,7 @@ file: test_fs.d, size: 35, data_blk: 2
 file: run.sh, size: 117, data_blk: 3
 ```
 
+don't assign block in @fs_create, in case the file is empty.  
+
 
 

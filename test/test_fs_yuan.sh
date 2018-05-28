@@ -170,7 +170,8 @@ run_fs_info() {
     add_answer "${sub}"
 }
 
-# Info with files
+# Add by fs_ref.x 
+# Info with files, size : 0, 2048, 4096,4097
 run_fs_info_full() {
     log "\n--- Running ${FUNCNAME} ---"
 
@@ -204,9 +205,9 @@ run_fs_info_full() {
 
 #
 # Phase 2
-#
+# add with test_fs.x, ls with fs_ref.x
 
-# make fs with fs_make.x, add with test_fs.x, ls with fs_ref.x
+
 run_fs_simple_create() {
     log "\n--- Running ${FUNCNAME} ---"
 
@@ -219,7 +220,7 @@ run_fs_simple_create() {
 	local line_array=()
 	line_array+=("$(select_line "${STDOUT}" "2")")
 	local corr_array=()
-	corr_array+=("file: test-file-1, size: 10, data_blk: 1")
+	corr_array+=("file: test-file-c1, size: 10, data_blk: 1")
 
 	sub=0
 	compare_output_lines line_array[@] corr_array[@] "1"
@@ -227,7 +228,7 @@ run_fs_simple_create() {
 	add_answer "${sub}"
 }
 
-# make fs with fs_make.x, add two with test_fs.x, ls with fs_ref.x
+# add two with test_fs.x, ls with fs_ref.x
 run_fs_create_multiple() {
     log "\n--- Running ${FUNCNAME} ---"
 
