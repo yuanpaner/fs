@@ -753,10 +753,10 @@ int fs_write(int fd, void *buf, size_t count)
     int real_count = count;
 
     if(!real_count){
-        dir_entry->unused[0] == 'n'; 
+        dir_entry->unused[0] = 'n'; 
         return real_count;
     }
-\   
+       
     if( dir_entry->first_data_blk == 0){ // no blk assign
         dir_entry->first_data_blk = get_freeFat_idx();
         if(dir_entry->first_data_blk == -1){ // not valid fat
