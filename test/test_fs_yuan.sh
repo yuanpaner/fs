@@ -244,8 +244,8 @@ run_fs_xM_create() {
     # run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
 
     # add file-1M, test ls
-    # run_test ./test_fs.x ls test.fs
-    run_test ./fs_ref.x ls test.fs
+    run_test ./test_fs.x ls test.fs
+    # run_test ./fs_ref.x ls test.fs
 
     local line_array=()
     line_array+=("$(select_line "${STDOUT}" "2")")
@@ -286,7 +286,8 @@ run_fs_xM_create() {
     add_answer "${sub}"
 
     # add file-2M, test ls 
-    unset line_array, corr_array
+    line_array=()
+    corr_array=()
     run_tool timeout 2 ./test_fs.x rm test.fs test-file-1M
     run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
     run_test ./test_fs.x ls test.fs
@@ -300,7 +301,8 @@ run_fs_xM_create() {
     add_answer "${sub}"
 
     # test info
-    unset line_array, corr_array
+    line_array=()
+    corr_array=()
     run_test ./test_fs.x info test.fs
 
     line_array+=("$(select_line "${STDOUT}" "1")")
