@@ -491,7 +491,7 @@ int fs_create(const char *filename)
 	/* @filename is invalid; or string @filename is too long*/
     if (filename == NULL || filename[0] == 0 || strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
     {
-        eprintf("fs_create: filaname error\n");
+        eprintf("fs_create: filaname is invalid\n");
         return -1;
     }
     /* a file named @filename already exists; or the root directory already contains
