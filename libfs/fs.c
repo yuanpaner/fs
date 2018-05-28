@@ -760,9 +760,11 @@ int fs_write(int fd, void *buf, size_t count)
             // memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
             return -1; // unmount?
         }
+
         dir_entry->last_data_blk = dir_entry->first_data_blk;
         fat16 = get_fat(dir_entry->first_data_blk);
         *fat16 = 0xFFFF;
+        sp->fat_used += 1; // !!!!
     }
     // dir_entry->first_data_blk = get_freeFat_idx(); // entry, should assign block here, in case the file size is 0;
     // if(dir_entry->first_data_blk == -1){ // not valid fat
