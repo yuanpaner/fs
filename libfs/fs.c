@@ -842,7 +842,7 @@ int fs_write(int fd, void *buf, size_t count)
 
     if(block_read(sp->data_blk + old_last, bounce_buffer) < 0) return -1; // should free bounce_buffer before return -1
     // size_t truncate = strlen(bounce_buffer); // or should I use truncate = w_dir_entry->file_sz % BLOCK_SIZE // error
-    size_t truncate = w_dir_entry->offset % BLOCK_SIZE;
+    size_t truncate = (filedes[fd]->offset) % BLOCK_SIZE;
     size_t buf_idx = clamp(BLOCK_SIZE - truncate, real_count);
     memcpy(bounce_buffer + truncate, buf, buf_idx);
     if(block_write(sp->data_blk + old_last, bounce_buffer) < 0 ) return -1; 
