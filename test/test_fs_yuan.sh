@@ -244,7 +244,8 @@ run_fs_xM_create() {
     # run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
 
     # add file-1M, test ls
-    run_test ./test_fs.x ls test.fs
+    # run_test ./test_fs.x ls test.fs
+    run_test ./fs_ref.x ls test.fs
 
     local line_array=()
     line_array+=("$(select_line "${STDOUT}" "2")")
