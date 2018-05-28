@@ -798,6 +798,8 @@ int fs_write(int fd, void *buf, size_t count)
             if(next == -1) break; // no valid fat; actually impossible
             uint16_t * fat_entry = get_fat(dir_entry->last_data_blk);
             *fat_entry = next;
+            fat_entry = get_fat(next);
+            *fat_entry = 0xFFFF;
             // *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
