@@ -530,7 +530,7 @@ int fs_create(const char *filename)
     // *fat16 = 0xFFFF;
 
     // sp->fat_used += 1;
-    // sp->rdir_used += 1;
+    sp->rdir_used += 1; // how to deal with @setup_sp
 
     return 0;
 }
