@@ -788,7 +788,7 @@ int fs_write(int fd, void *buf, size_t count)
     uint16_t old_last = w_dir_entry->last_data_blk;
 
     int blk_more = blk_new - blk_old;
-    if (blk_more > sp->data_blk_count - sp->fat_used){
+    if(blk_more > sp->data_blk_count - sp->fat_used){
         blk_more = sp->data_blk_count - sp->fat_used;
         real_count = blk_new * BLOCK_SIZE - w_dir_entry->file_sz;
     }
@@ -798,7 +798,7 @@ int fs_write(int fd, void *buf, size_t count)
         //set up the blk;        
         while(blk_more > 0){
             int next = get_freeFat_idx();
-            if(next == -1) break; // no valid fat; actually impossible
+            // if(next == -1) break; // no valid fat; actually impossible
             uint16_t * fat_entry = get_fat(w_dir_entry->last_data_blk);
             *fat_entry = next;
             fat_entry = get_fat(next);
@@ -808,8 +808,8 @@ int fs_write(int fd, void *buf, size_t count)
             blk_more -= 1;
             // sp->fat_used += 1;
         }
-        if(blk_more != 0) // succeed to write all; error, fat entry migth be bigger than block entry
-            real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old; // actually impossible
+        // if(blk_more != 0) // succeed to write all; error, fat entry migth be bigger than block entry
+        //     real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old; // actually impossible
 
         *(get_fat(w_dir_entry->last_data_blk)) = 0xFFFF; 
     }
