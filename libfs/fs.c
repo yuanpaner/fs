@@ -137,7 +137,8 @@ uint16_t * get_fat(int id){
     if(fat == NULL) return NULL;
     if(id < 0 || id >= sp->data_blk_count) return NULL; // out of boundary
 
-    return (uint16_t *)(fat + sizeof(uint16_t) * id);
+    return (uint16_t *)(fat + 2 * id);
+    // return (uint16_t *)(fat + sizeof(uint16_t) * id);
 }
 
 
@@ -170,7 +171,7 @@ uint16_t get_freeFat_idx(){
     if(fat == NULL || sp == NULL)
         return -1;
     if(sp->data_blk_count - sp->fat_used == 0) {
-        eprintf("fat exhausted\n");
+        eprintf("data blk exhausted\n");
         return -1;
     }       
 
