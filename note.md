@@ -10,8 +10,13 @@ ECS 150: Project #4 - File system
 Read 也一样，会不会有fd1在write，fd2在read，并且同时进行，那么就要用事实更新的file_sz  
 见test  
 
-w_dir_entry->first_data_blk == 0xFFFF 说明block的个数怎么都不会是0xFFFF个对吧。power(2, 16) * 4K
+w_dir_entry->first_data_blk == 0xFFFF 说明block的个数怎么都不会是0xFFFF个对吧。power(2, 16) * 4K  
 
+关于fd和filename  
+```c
+int fs_create(const char *filename);
+int fs_delete(const char *filename);
+int fs_open(const char *filename);
 
 
 ## General Framework
@@ -140,6 +145,9 @@ So I need to update the file_sz very carefully.
 - [ ] what file name we use  
 For example, if I add a file ../filename to the test.fs. Should I add it as "filename" or as "../filename" directly?  
 
+- [ ] write with different filenames  
+Your program should be able to handle filenames no larger than 16 bytes  
+And my question is more about the requirement, like if we add a file from the parent folder (../), which filename are we expected to use, "../filename", or just "filename" ?   
 - [X] write one small file
 - [X] write one large file
 - [X] write one large file out of boundary
@@ -153,14 +161,10 @@ For example, if I add a file ../filename to the test.fs. Should I add it as "fil
 - [ ] write to same files, multiple writes?
 need using new c file to test  
 the csif prompt when I try to edit one file simoutaneously:  
-(1) Another program may be editing the same file.  If this is the case,
-    be careful not to end up with two different instances of the same
-    file when making changes.  Quit, or continue with caution.
+(1) Another program may be editing the same file.  If this is the case, be careful not to end up with two different instances of the same file when making changes.  Quit, or continue with caution.  
 (2) An edit session for this file crashed.
-    If this is the case, use ":recover" or "vim -r run.sh"
-    to recover the changes (see ":help recovery").
-    If you did this already, delete the swap file ".run.sh.swp"
-    to avoid this message.  
+    If this is the case, use ":recover" or "vim -r run.sh" to recover the changes (see ":help recovery").  
+    If you did this already, delete the swap file ".run.sh.swp" to avoid this message.  
 It's ok if I use `vim -R` to open a file(Readonly) simoutaneously. 
 
 - [ ] add a "clean" to the test, remove all the files in the virtual disk
