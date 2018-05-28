@@ -519,18 +519,18 @@ int fs_create(const char *filename)
     dir_entry = get_dir(entry_id);
     strcpy(dir_entry->filename, filename);
     dir_entry->file_sz = 0;
-    dir_entry->first_data_blk = get_freeFat_idx(); // entry
-    if(dir_entry->first_data_blk == -1){ // not valid fat
-        memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
-        return -1; // unmount?
-    }
-    dir_entry->last_data_blk = dir_entry->first_data_blk;
-    // fat16 = fat + sizeof(uint16_t) * (dir_entry->first_data_blk);
-    fat16 = get_fat(dir_entry->first_data_blk);
-    *fat16 = 0xFFFF;
+    dir_entry->first_data_blk = 0; // entry, should assign block here, in case the file size is 0;
+    // dir_entry->first_data_blk = get_freeFat_idx(); // entry, should assign block here, in case the file size is 0;
+    // if(dir_entry->first_data_blk == -1){ // not valid fat
+    //     memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
+    //     return -1; // unmount?
+    // }
+    // dir_entry->last_data_blk = dir_entry->first_data_blk;
+    // fat16 = get_fat(dir_entry->first_data_blk);
+    // *fat16 = 0xFFFF;
 
     // sp->fat_used += 1;
-    // sp->rdir_used += 1;
+    sp->rdir_used += 1; // how to deal with @setup_sp
 
     return 0;
 }
@@ -740,7 +740,7 @@ int fs_lseek(int fd, size_t offset)
  √ calculate the real count written
  √ set up the FAT index (should after written success )
  √ write the content
- [] update file entry(should after written success)
+ √ update file entry(should after written success)
  */
 int fs_write(int fd, void *buf, size_t count)
 {
@@ -751,9 +751,35 @@ int fs_write(int fd, void *buf, size_t count)
     if(dir_entry->unused[0] == 'w') return -1; // others are writing this file
 
     int real_count = count;
+
+    if(!real_count){
+        dir_entry->unused[0] == 'n'; 
+        return real_count;
+    }
+\   
+    if( dir_entry->first_data_blk == 0){ // no blk assign
+        dir_entry->first_data_blk = get_freeFat_idx();
+        if(dir_entry->first_data_blk == -1){ // not valid fat
+            // memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
+            return -1; // unmount?
+        }
+        dir_entry->last_data_blk = dir_entry->first_data_blk;
+        fat16 = get_fat(dir_entry->first_data_blk);
+        *fat16 = 0xFFFF;
+    }
+    // dir_entry->first_data_blk = get_freeFat_idx(); // entry, should assign block here, in case the file size is 0;
+    // if(dir_entry->first_data_blk == -1){ // not valid fat
+    //     memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
+    //     return -1; // unmount?
+    // }
+    // dir_entry->last_data_blk = dir_entry->first_data_blk;
+    // fat16 = get_fat(dir_entry->first_data_blk);
+    // *fat16 = 0xFFFF;
+
     int file_sz_old = dir_entry->file_sz;
     int file_sz_new = file_sz_old + count;
     int blk_old = file_blk_count(file_sz_old); // block count needed
+    blk_old = (blk_old == 0 ? 1 : blk_old);
     int blk_new = file_blk_count(file_sz_new);
 
     uint16_t old_last = dir_entry->last_data_blk;

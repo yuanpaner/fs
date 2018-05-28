@@ -11,7 +11,7 @@ ECS 150: Project #4 - File system
 ## Mounting/unmounting
 
 ## File creation/deletion
-
+If file size is zero, the file entry in root directory should be added while no block is allocated to this file.
 ## File descriptor operations
 
 ## File reading/writing
@@ -186,6 +186,8 @@ FS Ls:
 file: test_fs.d, size: 35, data_blk: 2
 file: run.sh, size: 117, data_blk: 3
 ```
+
+don't assign block in @fs_create, in case the file is empty.  
 
 
 
