@@ -634,7 +634,9 @@ int fs_open(const char *filename)
     int fd = get_valid_fd();
     filedes[fd] = malloc(sizeof(struct FileDescriptor));
     filedes[fd]->file_entry = dir_entry;
-    filedes[fd]->offset = 0;
+    // filedes[fd]->offset = 0;
+    if(fs_lseek(fd, fs_stat(fd)) < 0)
+        return -1; 
 
     fd_cnt++;
 
@@ -713,6 +715,7 @@ int fs_lseek(int fd, size_t offset)
     if(offset > dir_entry->file_sz) return -1;
 
     filedes[fd]->offset = offset;
+
     return 0;
 }
 
@@ -742,52 +745,52 @@ int fs_lseek(int fd, size_t offset)
  */
 int fs_write(int fd, void *buf, size_t count)
 {
-	/* TODO: Phase 4 */
+    /* TODO: Phase 4 */
     if(!is_valid_fd(fd)) return -1;
 
-    dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
-    if(dir_entry->unused[0] == 'w') return -1; // others are writing this file
+    struct RootDirEntry * w_dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
+    if(w_dir_entry->unused[0] == 'w') return -1; // others are writing this file
 
     int real_count = count;
 
     if(real_count == 0){
-        dir_entry->unused[0] = 'n'; 
+        w_dir_entry->unused[0] = 'n'; 
         return real_count;
     }
 
-    if( dir_entry->first_data_blk == 0){ // no blk assign
-        dir_entry->first_data_blk = get_freeFat_idx();
-        if(dir_entry->first_data_blk == -1){ // not valid fat
-            // memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
+    if( w_dir_entry->first_data_blk == 0){ // no blk assign
+        w_dir_entry->first_data_blk = get_freeFat_idx();
+        if(w_dir_entry->first_data_blk == -1){ // not valid fat
+            // memset(w_dir_entry->filename, 0, sizeof(w_dir_entry->filename)); // make it free again.
             return -1; // unmount?
         }
 
-        dir_entry->last_data_blk = dir_entry->first_data_blk;
-        fat16 = get_fat(dir_entry->first_data_blk);
+        w_dir_entry->last_data_blk = w_dir_entry->first_data_blk;
+        fat16 = get_fat(w_dir_entry->first_data_blk);
         *fat16 = 0xFFFF;
         sp->fat_used += 1; // !!!!
     }
-    // dir_entry->first_data_blk = get_freeFat_idx(); // entry, should assign block here, in case the file size is 0;
-    // if(dir_entry->first_data_blk == -1){ // not valid fat
-    //     memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
+    // w_dir_entry->first_data_blk = get_freeFat_idx(); // entry, should assign block here, in case the file size is 0;
+    // if(w_dir_entry->first_data_blk == -1){ // not valid fat
+    //     memset(w_dir_entry->filename, 0, sizeof(w_dir_entry->filename)); // make it free again.
     //     return -1; // unmount?
     // }
-    // dir_entry->last_data_blk = dir_entry->first_data_blk;
-    // fat16 = get_fat(dir_entry->first_data_blk);
+    // w_dir_entry->last_data_blk = w_dir_entry->first_data_blk;
+    // fat16 = get_fat(w_dir_entry->first_data_blk);
     // *fat16 = 0xFFFF;
 
-    int file_sz_old = dir_entry->file_sz;
+    int file_sz_old = w_dir_entry->file_sz;
     int file_sz_new = file_sz_old + count;
     int blk_old = file_blk_count(file_sz_old); // block count needed
     // blk_old = (blk_old == 0 ? 1 : blk_old);
     int blk_new = file_blk_count(file_sz_new);
 
-    uint16_t old_last = dir_entry->last_data_blk;
+    uint16_t old_last = w_dir_entry->last_data_blk;
 
     int blk_more = blk_new - blk_old;
     if (blk_more > sp->data_blk_count - sp->fat_used){
         blk_more = sp->data_blk_count - sp->fat_used;
-        real_count = blk_new * BLOCK_SIZE - dir_entry->file_sz;
+        real_count = blk_new * BLOCK_SIZE - w_dir_entry->file_sz;
     }
         
 
@@ -796,19 +799,19 @@ int fs_write(int fd, void *buf, size_t count)
         while(blk_more > 0){
             int next = get_freeFat_idx();
             if(next == -1) break; // no valid fat; actually impossible
-            uint16_t * fat_entry = get_fat(dir_entry->last_data_blk);
+            uint16_t * fat_entry = get_fat(w_dir_entry->last_data_blk);
             *fat_entry = next;
             fat_entry = get_fat(next);
             *fat_entry = 0xFFFF; // if not, the "next" block still available
-            // *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
-            dir_entry->last_data_blk = next;
+            // *(get_fat(w_dir_entry->last_data_blk)) = next ; // update the fat chain
+            w_dir_entry->last_data_blk = next;
             blk_more -= 1;
             // sp->fat_used += 1;
         }
         if(blk_more != 0) // succeed to write all; error, fat entry migth be bigger than block entry
             real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old; // actually impossible
 
-        *(get_fat(dir_entry->last_data_blk)) = 0xFFFF; 
+        *(get_fat(w_dir_entry->last_data_blk)) = 0xFFFF; 
     }
 
     //start to write 
@@ -821,7 +824,7 @@ int fs_write(int fd, void *buf, size_t count)
 
     // int blk_more_real = blk_new - blk_old - blk_more;
     // ? fat index, and actual index, id should think about
-    // uint16_t truncate = dir_entry->file_sz % BLOCK_SIZE;
+    // uint16_t truncate = w_dir_entry->file_sz % BLOCK_SIZE;
     // if(truncate == 0){
 
     // }
@@ -838,7 +841,8 @@ int fs_write(int fd, void *buf, size_t count)
     memset(bounce_buffer, 0, BLOCK_SIZE);
 
     if(block_read(sp->data_blk + old_last, bounce_buffer) < 0) return -1; // should free bounce_buffer before return -1
-    size_t truncate = strlen(bounce_buffer); // or should I use truncate = dir_entry->file_sz % BLOCK_SIZE
+    // size_t truncate = strlen(bounce_buffer); // or should I use truncate = w_dir_entry->file_sz % BLOCK_SIZE // error
+    size_t truncate = w_dir_entry->offset % BLOCK_SIZE;
     size_t buf_idx = clamp(BLOCK_SIZE - truncate, real_count);
     memcpy(bounce_buffer + truncate, buf, buf_idx);
     if(block_write(sp->data_blk + old_last, bounce_buffer) < 0 ) return -1; 
@@ -863,9 +867,9 @@ int fs_write(int fd, void *buf, size_t count)
 
     free(bounce_buffer);
 
-    dir_entry->unused[0] = 'n';
+    w_dir_entry->unused[0] = 'n';
 
-    dir_entry->file_sz += real_count;
+    w_dir_entry->file_sz += real_count;
 
     return real_count;
 }
