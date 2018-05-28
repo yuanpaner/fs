@@ -134,7 +134,7 @@ struct RootDirEntry * get_dir(int id){
 
 /* get file directory entry pointer according to block id */
 uint16_t * get_fat(int id){
-    if(fat == NULL || id = 0xFFFF) return NULL;
+    if(fat == NULL || id == 0xFFFF) return NULL;
     if(id < 0 || id >= sp->data_blk_count) return NULL; // out of boundary
 
     return (uint16_t *)(fat + 2 * id);
