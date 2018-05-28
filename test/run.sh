@@ -1,3 +1,4 @@
+echo start to run....
 make clean
 make
 # ./fs_ref.x info disk  # > output_ref
