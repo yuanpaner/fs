@@ -233,7 +233,7 @@ run_fs_simple_create() {
 
 
 # Phase 2+
-# add large file and ls, info
+# add large file and  info, why only able to use ./fs_ref.x ls test.fs
 run_fs_xM_create() {
     log "\n--- Running ${FUNCNAME} ---"
 
@@ -245,11 +245,12 @@ run_fs_xM_create() {
 
     # add file-1M, test ls
     # run_test ./test_fs.x ls test.fs
-    run_test ./fs_ref.x ls test.fs
 
     local line_array=()
-    line_array+=("$(select_line "${STDOUT}" "2")")
     local corr_array=()
+
+    run_test ./fs_ref.x ls test.fs
+    line_array+=("$(select_line "${STDOUT}" "2")")
     corr_array+=("file: test-file-1M, size: 1048576, data_blk: 1")
 
     sub=0
