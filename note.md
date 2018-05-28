@@ -4,7 +4,9 @@ ECS 150: Project #4 - File system
 
 可以open好几次？在不同的地方读写。每次读写都会移动相同的offset还是。听老师上课的意思互相独立那就是各有各的offset，读ok，写怎么办。各有各的offset，但是在文件本身，设置一个open的检查。不能同时write。每次都是从末尾写么，会不会从中间写。  
 
-Read 也一样，会不会有fd1在write，fd2在read，并且同时进行，那么就要用事实更新的file_sz
+Read 也一样，会不会有fd1在write，fd2在read，并且同时进行，那么就要用事实更新的file_sz  
+
+w_dir_entry->first_data_blk == 0xFFFF 说明block的个数怎么都不会是0xFFFF个对吧。power(2, 16) * 4K
 
 - [ ] memory leak for phase 1
 - [ ] group all the malloc and free in function
@@ -128,8 +130,12 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 - [ ] write several large files out of boundary
 
 - [ ] write to full disk  
-data blk exhausted  
-Segmentation fault (core dumped)  
+√ data blk exhausted  
+√ Segmentation fault (core dumped)  
+- [X] remove regular file
+- [X] remove empty file
+
+- [ ] remove file which is opened by others????
 
 ```c
 $ fs_ref.x add disk run.sh

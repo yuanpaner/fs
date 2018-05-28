@@ -134,7 +134,7 @@ struct RootDirEntry * get_dir(int id){
 
 /* get file directory entry pointer according to block id */
 uint16_t * get_fat(int id){
-    if(fat == NULL) return NULL;
+    if(fat == NULL || id = 0xFFFF) return NULL;
     if(id < 0 || id >= sp->data_blk_count) return NULL; // out of boundary
 
     return (uint16_t *)(fat + 2 * id);
@@ -217,7 +217,7 @@ int get_dirEntry_idx(const char * filename){
  * update the sp->fat_used
 */
 int erase_fat(uint16_t * id){ // recursion to erase
-    if(sp == NULL || root_dir == NULL)
+    if(sp == NULL || root_dir == NULL || id == NULL)
         return -1;
 
     if(*id == 0xFFFF){
@@ -520,7 +520,10 @@ int fs_create(const char *filename)
     dir_entry = get_dir(entry_id);
     strcpy(dir_entry->filename, filename);
     dir_entry->file_sz = 0;
-    dir_entry->first_data_blk = 0; // entry, should assign block here, in case the file size is 0;
+    dir_entry->open = 0;
+    dir_entry->first_data_blk = 0xFFFF; // entry, should assign block here, in case the file size is 0;
+    dir_entry->last_data_blk = 0xFFFF;
+    memset(dir_entry->unused, 0, 7);
     // dir_entry->first_data_blk = get_freeFat_idx(); // entry, should assign block here, in case the file size is 0;
     // if(dir_entry->first_data_blk == -1){ // not valid fat
     //     memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
@@ -562,8 +565,9 @@ int fs_delete(const char *filename)
         return -1; // open
 
     fat16 =  get_fat(cur_entry->first_data_blk);
-    erase_fat(fat16);
-    memset(cur_entry->filename, 0, FS_FILENAME_LEN); // error: dir[entry_id]->filename = NULL;
+    erase_fat(fat16); // how about return -1?
+    memset(cur_entry, 0, sizeof(struct RootDirEntry)); // error: dir[entry_id]->filename = NULL;
+    // memset(cur_entry->filename, 0, FS_FILENAME_LEN); // error: dir[entry_id]->filename = NULL;
 
     sp->rdir_used -= 1;
     return 0;
@@ -750,16 +754,17 @@ int fs_write(int fd, void *buf, size_t count)
     if(sp->data_blk_count == sp->fat_used ) return 0; // not error -1; return "written" count 0;
 
     struct RootDirEntry * w_dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
+
     if(w_dir_entry->unused[0] == 'w') return -1; // others are writing this file
 
     int real_count = count;
 
-    if(real_count == 0){
+    if(real_count == 0){ // write 0 B
         w_dir_entry->unused[0] = 'n'; 
         return real_count;
     }
 
-    if( w_dir_entry->first_data_blk == 0){ // no blk assign
+    if( w_dir_entry->first_data_blk == 0xFFFF){ // no blk assign
         w_dir_entry->first_data_blk = get_freeFat_idx();
         if(w_dir_entry->first_data_blk == -1){ // not valid fat
             // memset(w_dir_entry->filename, 0, sizeof(w_dir_entry->filename)); // make it free again.
