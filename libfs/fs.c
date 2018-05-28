@@ -489,7 +489,7 @@ int fs_create(const char *filename)
         return -1;
     }
 	/* @filename is invalid; or string @filename is too long*/
-    if (filename == NULL || strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
+    if (filename == NULL || filename[0] == 0 || strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
     {
         eprintf("fs_create: filaname error\n");
         return -1;

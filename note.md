@@ -18,6 +18,14 @@ int fs_create(const char *filename);
 int fs_delete(const char *filename);
 int fs_open(const char *filename);
 
+// after create, and open, we should use file descriptor to keep track of the file status
+// fd contains: filename, offset, and file entry shows the open and closed status
+int fs_close(int fd);
+int fs_stat(int fd);
+int fs_lseek(int fd, size_t offset);
+int fs_write(int fd, void *buf, size_t count);
+int fs_read(int fd, void *buf, size_t count);
+```
 
 ## General Framework
 
@@ -148,6 +156,10 @@ For example, if I add a file ../filename to the test.fs. Should I add it as "fil
 - [ ] write with different filenames  
 Your program should be able to handle filenames no larger than 16 bytes  
 And my question is more about the requirement, like if we add a file from the parent folder (../), which filename are we expected to use, "../filename", or just "filename" ?   
+I think I got it.  
+FYI. I use fs_ref.x to try that, and it shows, using "../filename", although I think it a little weird.   
+In my opinion, the file in the virtual disk is an independent new file unrelated to the copied one, and we should remove the absolute path included in the filename. But for this assignment I think it understandable to keep it, for testing conveniently.   
+
 - [X] write one small file
 - [X] write one large file
 - [X] write one large file out of boundary
