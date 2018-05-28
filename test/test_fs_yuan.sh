@@ -258,7 +258,8 @@ run_fs_xM_create() {
     add_answer "${sub}"
 
     # test info
-    unset line_array, corr_array
+    line_array=()
+    corr_array=()
     run_test ./test_fs.x info test.fs
 
     line_array+=("$(select_line "${STDOUT}" "1")")
