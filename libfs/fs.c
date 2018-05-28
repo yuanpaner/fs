@@ -703,9 +703,6 @@ int fs_stat(int fd)
  * open), or if @offset is out of bounds (beyond the end of the file). 0
  * otherwise.
 
-
- This function sets the file pointer (the offset used for read and write operations) associated with the file descriptor fildes to the argument offset. It is an error to set the file pointer beyond the end of the file. To append to a file, one can set the file pointer to the end of a file, for example, by calling fs_lseek(fd, fs_get_filesize(fd));. Upon successful completion, a value of 0 is returned. fs_lseek returns -1 on failure. It is a failure when the file descriptor fildes is invalid, when the requested offset is larger than the file size, or when offset is less than zero.
-
  */
 int fs_lseek(int fd, size_t offset)
 {
@@ -752,11 +749,11 @@ int fs_write(int fd, void *buf, size_t count)
 
     int real_count = count;
 
-    if(!real_count){
+    if(real_count == 0){
         dir_entry->unused[0] = 'n'; 
         return real_count;
     }
-       
+
     if( dir_entry->first_data_blk == 0){ // no blk assign
         dir_entry->first_data_blk = get_freeFat_idx();
         if(dir_entry->first_data_blk == -1){ // not valid fat
@@ -779,27 +776,32 @@ int fs_write(int fd, void *buf, size_t count)
     int file_sz_old = dir_entry->file_sz;
     int file_sz_new = file_sz_old + count;
     int blk_old = file_blk_count(file_sz_old); // block count needed
-    blk_old = (blk_old == 0 ? 1 : blk_old);
+    // blk_old = (blk_old == 0 ? 1 : blk_old);
     int blk_new = file_blk_count(file_sz_new);
 
     uint16_t old_last = dir_entry->last_data_blk;
 
     int blk_more = blk_new - blk_old;
+    if (blk_more > sp->data_blk_count - sp->fat_used){
+        blk_more = sp->data_blk_count - sp->fat_used;
+        real_count = blk_new * BLOCK_SIZE - dir_entry->file_sz;
+    }
+        
 
     if(blk_old != blk_new){
         //set up the blk;        
         while(blk_more > 0){
             int next = get_freeFat_idx();
-            if(next == -1) break; // no valid fat
+            if(next == -1) break; // no valid fat; actually impossible
 
             *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
             // sp->fat_used += 1;
         }
-        if(blk_more != 0) // succeed to write all
-            //update real_count;
-            real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old;
+        if(blk_more != 0) // succeed to write all; error, fat entry migth be bigger than block entry
+            real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old; // actually impossible
+
         *(get_fat(dir_entry->last_data_blk)) = 0xFFFF; 
     }
 
