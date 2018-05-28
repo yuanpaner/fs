@@ -248,7 +248,7 @@ run_fs_xM_create() {
     # run_test ./fs_ref.x ls test.fs
 
     local line_array=()
-    line_array+=("$(select_line "${STDOUT}" "2")")
+    line_array+=("$(select_line "${STDOUT}" "1")")
     local corr_array=()
     corr_array+=("file: test-file-1M, size: 1048576, data_blk: 1")
 
@@ -256,6 +256,7 @@ run_fs_xM_create() {
     compare_output_lines line_array[@] corr_array[@] "1"
     inc_total
     add_answer "${sub}"
+
 
     # test info
     line_array=()
