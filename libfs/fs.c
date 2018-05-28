@@ -799,7 +799,7 @@ int fs_write(int fd, void *buf, size_t count)
             uint16_t * fat_entry = get_fat(dir_entry->last_data_blk);
             *fat_entry = next;
             fat_entry = get_fat(next);
-            *fat_entry = 0xFFFF;
+            *fat_entry = 0xFFFF; // if not, the "next" block still available
             // *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
