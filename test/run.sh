@@ -1,3 +1,5 @@
+#!/bin/sh
+
 echo start to run....
 make clean
 make

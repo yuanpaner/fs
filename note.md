@@ -42,6 +42,12 @@ rdir_free_ratio = Number of root directory entries available (free) / size of ro
 @421  
 Since the value 0 denotes that a FAT entry is available, the data block #0 can never be allocated to a file. That's why this data block is simply lost.  
 
+@493  char *, null terminator  
+By definition a C string is a character array that has a null character at the end to denote the end of the string.
+However the memory pointed to by a char* need not be NULL terminated character array. (It's just a pointer to memory, the char* is just to indicate to compiler as to how many bytes it should add/ subtract when doing pointer arithmetic)  
+https://stackoverflow.com/questions/47288881/are-c-constant-character-strings-always-null-terminated  
+https://softwareengineering.stackexchange.com/questions/344603/are-c-strings-always-null-terminated-or-does-it-depend-on-the-platform  
+
 
   
 ## Source
@@ -128,6 +134,10 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 - [ ] write several small files
 - [ ] write several large files
 - [ ] write several large files out of boundary
+
+
+- [ ] write to same files  
+need using new c file to test 
 
 - [X] write to full disk  
 √ data blk exhausted  
