@@ -747,6 +747,7 @@ int fs_write(int fd, void *buf, size_t count)
 {
     /* TODO: Phase 4 */
     if(!is_valid_fd(fd)) return -1;
+    if(sp->data_blk_count == sp->fat_used ) return -1;
 
     struct RootDirEntry * w_dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
     if(w_dir_entry->unused[0] == 'w') return -1; // others are writing this file
@@ -762,6 +763,7 @@ int fs_write(int fd, void *buf, size_t count)
         w_dir_entry->first_data_blk = get_freeFat_idx();
         if(w_dir_entry->first_data_blk == -1){ // not valid fat
             // memset(w_dir_entry->filename, 0, sizeof(w_dir_entry->filename)); // make it free again.
+            w_dir_entry->first_data_blk = 0xFFFF; // according to fs_ref.x result, occupy the rdir, no dota block
             return -1; // unmount?
         }
 

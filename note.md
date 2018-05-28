@@ -10,7 +10,7 @@ Read 也一样，会不会有fd1在write，fd2在read，并且同时进行，那
 - [ ] group all the malloc and free in function
 - [X] phase 1, FAT
 - [X] fat_free_ratio=4095/4096 ? rdir_free_ratio=128/128 ?
-
+- [X] don't assign block in @fs_create, in case the file is empty. 
 
 ## General Framework
 
@@ -23,6 +23,22 @@ If file size is zero, the file entry in root directory should be added while no 
 ## File reading/writing
 
 
+
+## Source - Piazza
+@453   
+```c
+fs_info() should print the entire output generate when you enter "./fs_ref.x info ...".
+The values you need to print are:
+total_blk_count = total number of blocks
+fat_blk_count = number of FAT blocks
+rdir_blk = Index of root directory
+data_blk = Index of first data block in virtual disk
+data_blk_count = number of data blocks
+fat_free_ratio = Number of FAT entries available (free) / number of data blocks
+rdir_free_ratio = Number of root directory entries available (free) / size of root directory  
+```
+@421  
+Since the value 0 denotes that a FAT entry is available, the data block #0 can never be allocated to a file. That's why this data block is simply lost.  
 
 
   
@@ -55,21 +71,7 @@ http://codeandlife.com/2012/04/07/simple-fat-and-sd-tutorial-part-2/   !!!
 links  
 https://www.edaboard.com/showthread.php?176568-C-code-for-FAT-file-implementation-using-PIC18F4550
   
-piazza  
-@453   
-```c
-fs_info() should print the entire output generate when you enter "./fs_ref.x info ...".
-The values you need to print are:
-total_blk_count = total number of blocks
-fat_blk_count = number of FAT blocks
-rdir_blk = Index of root directory
-data_blk = Index of first data block in virtual disk
-data_blk_count = number of data blocks
-fat_free_ratio = Number of FAT entries available (free) / number of data blocks
-rdir_free_ratio = Number of root directory entries available (free) / size of root directory  
-```
-@421  
-Since the value 0 denotes that a FAT entry is available, the data block #0 can never be allocated to a file. That's why this data block is simply lost.  
+
 
 ## Source II 
 Virtual Filesystem (VFS) in Linux  
@@ -118,6 +120,36 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 
 
 ## Test output
+- [ ] write one small file
+- [ ] write one large file
+- [ ] write one large file out of boundary
+- [ ] write several small files
+- [ ] write several large files
+- [ ] write several large files out of boundary
+
+- [ ] write to full disk  
+data blk exhausted  
+Segmentation fault (core dumped)  
+
+```c
+$ fs_ref.x add disk run.sh
+Wrote file 'run.sh' (0/121 bytes)
+$ fs_ref.x info disk
+FS Info:
+total_blk_count=303
+fat_blk_count=1
+rdir_blk=2
+data_blk=3
+data_blk_count=300
+fat_free_ratio=0/300
+rdir_free_ratio=124/128 // decrease
+```
+
+
+
+
+
+
 ```c
 int main(int argc, char **argv)
 {
@@ -207,7 +239,7 @@ file: test_fs.d, size: 35, data_blk: 2
 file: run.sh, size: 117, data_blk: 3
 ```
 
-don't assign block in @fs_create, in case the file is empty.  
+ 
 
 
 
