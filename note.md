@@ -122,14 +122,14 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 
 
 ## Test output
-- [ ] write one small file
-- [ ] write one large file
+- [X] write one small file
+- [X] write one large file
 - [ ] write one large file out of boundary
 - [ ] write several small files
 - [ ] write several large files
 - [ ] write several large files out of boundary
 
-- [ ] write to full disk  
+- [X] write to full disk  
 √ data blk exhausted  
 √ Segmentation fault (core dumped)  
 - [X] remove regular file
