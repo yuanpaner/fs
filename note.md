@@ -141,15 +141,9 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 
 
 ## Test output
-- [X] info, ls
-- [ ] what is script  
-piazza 
+> fs_read  
 
-- [ ] read with cat
-- [ ] read with offset? multiple read? Each has an independent offset.   
-- [ ] read when writing
-So I need to update the file_sz very carefully.  
-
+- [X] repeated filename    
 - [X] what file name we use  
 For example, if I add a file ../filename to the test.fs. Should I add it as "filename" or as "../filename" directly?  
 - [X] write with different filenames  
@@ -160,7 +154,17 @@ I think I got it.
 In my opinion, the file in the virtual disk is an independent new file unrelated to the copied one, and we should remove the absolute path included in the filename. But for this assignment I think it understandable to keep it, for testing conveniently.</br>  
 15-char name, added, pass  
 16-char name, unable to added, pass  
-name with space,  added,  pass  
+name with space,  added,  pass 
+
+- [X] info, ls
+- [ ] what is script  
+piazza 
+
+- [ ] read with cat
+- [ ] read with offset? multiple read? Each has an independent offset.   
+- [ ] read when writing
+So I need to update the file_sz very carefully.  
+
 
 - [X] write one small file
 - [X] write one large file
