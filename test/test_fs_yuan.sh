@@ -171,19 +171,22 @@ run_fs_info() {
 }
 
 # Add by fs_ref.x 
-# Info with files, size : 0, 2048, 4096,4097
+# Info with files, size : 0, 2048, 4096, 4097, 1M 
 run_fs_info_full() {
     log "\n--- Running ${FUNCNAME} ---"
 
-	run_tool ./fs_make.x test.fs 100
+    # run_tool ./fs_make.x test.fs 100  # not enough
+	run_tool ./fs_make.x test.fs 300
     run_tool dd if=/dev/urandom of=test-file-0 bs=2048 count=0
 	run_tool dd if=/dev/urandom of=test-file-1 bs=2048 count=1 
 	run_tool dd if=/dev/urandom of=test-file-2 bs=2048 count=2 # 4096
-	run_tool dd if=/dev/urandom of=test-file-3 bs=4097 count=1 # 4097
+    run_tool dd if=/dev/urandom of=test-file-3 bs=4097 count=1 # 4097
+	run_tool dd if=/dev/urandom of=test-file-4 bs=1M count=1 # 1024K, 256 block
     run_tool ./fs_ref.x add test.fs test-file-0
 	run_tool ./fs_ref.x add test.fs test-file-1
 	run_tool ./fs_ref.x add test.fs test-file-2
-	run_tool ./fs_ref.x add test.fs test-file-3
+    run_tool ./fs_ref.x add test.fs test-file-3
+	run_tool ./fs_ref.x add test.fs test-file-4
 
 	run_test ./test_fs.x info test.fs
     rm -f test-file-* test.fs
@@ -193,8 +196,8 @@ run_fs_info_full() {
 	line_array+=("$(select_line "${STDOUT}" "7")")
 	line_array+=("$(select_line "${STDOUT}" "8")")
 	local corr_array=()
-	corr_array+=("fat_free_ratio=95/100")
-	corr_array+=("rdir_free_ratio=125/128")
+	corr_array+=("fat_free_ratio=39/300") # 0 + 1 + 1 + 2 + 256 + 1(0)
+	corr_array+=("rdir_free_ratio=123/128")
 
 	sub=0
 	compare_output_lines line_array[@] corr_array[@] "0.5"

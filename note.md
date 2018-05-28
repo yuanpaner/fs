@@ -90,19 +90,26 @@ struct stat, and fstat
 http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html  
 http://pubs.opengroup.org/onlinepubs/009695399/functions/fstat.html
 
-bash, shell  
+bash, shell, command  
 https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html  
-BASH_SOURCE[0]
+> BASH_SOURCE[0]  
+
 https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source  
 http://www.tutorialspoint.com/unix/unix-special-variables.htm  
-||   
+> ||   
+
 make > /dev/null 2>&1 ||  
         die "Compilation failed"  
 https://unix.stackexchange.com/questions/325705/why-is-pattern-command-true-useful  
-@  
+> "$@", "$*", $*  
+
 https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script  
 {, , }  
-[A..Z]
+[A..Z]  
+
+> dd  
+
+
 
 ## Test output
 ```c
