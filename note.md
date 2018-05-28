@@ -1,5 +1,10 @@
 ECS 150: Project #4 - File system
 
+感觉我的write没必要一开始计算offset啊，因为create之后就立马会write，总是从0开始的。。。我为什么要这么搞？  
+可以open好几次？在不同的地方读写。每次读写都会移动相同的offset还是。听老师上课的意思互相独立那就是各有各的offset，读ok，写怎么办。各有各的offset，但是在文件本身，设置一个open的检查。不能同时write。每次都是从末尾写么，会不会从中间写。  
+
+
+
 - [ ] memory leak for phase 1
 - [ ] group all the malloc and free in function
 - [X] phase 1, FAT

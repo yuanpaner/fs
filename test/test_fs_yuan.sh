@@ -250,7 +250,7 @@ run_fs_xM_create() {
     local corr_array=()
 
     # run_test ./fs_ref.x ls test.fs
-    run_test ./test_fs.x ls test.fs
+    run_test ./test_fs.x ls test.fs # why this doesn't work
     line_array+=("$(select_line "${STDOUT}" "2")")
     corr_array+=("file: test-file-1M, size: 1048576, data_blk: 1")
 
