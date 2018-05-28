@@ -209,8 +209,6 @@ run_fs_info_full() {
 #
 # Phase 2
 # add with test_fs.x, ls with fs_ref.x
-
-
 run_fs_simple_create() {
     log "\n--- Running ${FUNCNAME} ---"
 
@@ -229,9 +227,108 @@ run_fs_simple_create() {
 	compare_output_lines line_array[@] corr_array[@] "1"
 	inc_total
 	add_answer "${sub}"
+
+
 }
 
-# add two with test_fs.x, ls with fs_ref.x
+
+# Phase 2+
+# add large file and ls, info
+run_fs_xM_create() {
+    log "\n--- Running ${FUNCNAME} ---"
+
+    run_tool ./fs_make.x test.fs 300
+    run_tool dd if=/dev/zero of=test-file-1M bs=1M count=1
+    run_tool dd if=/dev/zero of=test-file-2M bs=2M count=1
+    run_tool timeout 2 ./test_fs.x add test.fs test-file-1M
+    # run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
+
+    # add file-1M, test ls
+    run_test ./test_fs.x ls test.fs
+
+    local line_array=()
+    line_array+=("$(select_line "${STDOUT}" "2")")
+    local corr_array=()
+    corr_array+=("file: test-file-1M, size: 1048576, data_blk: 1")
+
+    sub=0
+    compare_output_lines line_array[@] corr_array[@] "1"
+    inc_total
+    add_answer "${sub}"
+
+    # test info
+    unset line_array, corr_array
+    run_test ./test_fs.x info test.fs
+
+    line_array+=("$(select_line "${STDOUT}" "1")")
+    line_array+=("$(select_line "${STDOUT}" "2")")
+    line_array+=("$(select_line "${STDOUT}" "3")")
+    line_array+=("$(select_line "${STDOUT}" "4")")
+    line_array+=("$(select_line "${STDOUT}" "5")")
+    line_array+=("$(select_line "${STDOUT}" "6")")
+    line_array+=("$(select_line "${STDOUT}" "7")")
+    line_array+=("$(select_line "${STDOUT}" "8")")
+
+    corr_array+=("FS Info:")
+    corr_array+=("total_blk_count=303")
+    corr_array+=("fat_blk_count=1")
+    corr_array+=("rdir_blk=2")
+    corr_array+=("data_blk=3")
+    corr_array+=("data_blk_count=300")
+    corr_array+=("fat_free_ratio=43/300")
+    corr_array+=("rdir_free_ratio=127/128")
+
+    sub=0
+    compare_output_lines line_array[@] corr_array[@] "0.125"
+    inc_total
+    add_answer "${sub}"
+
+    # add file-2M, test ls 
+    unset line_array, corr_array
+    run_tool timeout 2 ./test_fs.x rm test.fs test-file-1M
+    run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
+    run_test ./test_fs.x ls test.fs
+
+    line_array+=("$(select_line "${STDOUT}" "2")")
+    corr_array+=("file: test-file-2M, size: 1224704, data_blk: 1") # Wrote file 'test-file-5' (1224704/2097152 bytes)
+
+    sub=0
+    compare_output_lines line_array[@] corr_array[@] "1"
+    inc_total
+    add_answer "${sub}"
+
+    # test info
+    unset line_array, corr_array
+    run_test ./test_fs.x info test.fs
+
+    line_array+=("$(select_line "${STDOUT}" "1")")
+    line_array+=("$(select_line "${STDOUT}" "2")")
+    line_array+=("$(select_line "${STDOUT}" "3")")
+    line_array+=("$(select_line "${STDOUT}" "4")")
+    line_array+=("$(select_line "${STDOUT}" "5")")
+    line_array+=("$(select_line "${STDOUT}" "6")")
+    line_array+=("$(select_line "${STDOUT}" "7")")
+    line_array+=("$(select_line "${STDOUT}" "8")")
+
+    corr_array+=("FS Info:")
+    corr_array+=("total_blk_count=303")
+    corr_array+=("fat_blk_count=1")
+    corr_array+=("rdir_blk=2")
+    corr_array+=("data_blk=3")
+    corr_array+=("data_blk_count=300")
+    corr_array+=("fat_free_ratio=0/300")
+    corr_array+=("rdir_free_ratio=127/128")
+
+    sub=0
+    compare_output_lines line_array[@] corr_array[@] "0.125"
+    inc_total
+    add_answer "${sub}"
+
+    run_test ./fs_ref.x ls test.fs
+    rm -f test.fs test-file-1M test-file-2M
+}
+
+# add two with test_fs.x, ls with fs_ref.x, within boundary
 run_fs_create_multiple() {
     log "\n--- Running ${FUNCNAME} ---"
 
@@ -267,6 +364,7 @@ run_tests() {
 	run_fs_info_full
 	# Phase 2
 	run_fs_simple_create
+    run_fs_xM_create # yuan
 	run_fs_create_multiple
 }
 
