@@ -153,14 +153,14 @@ int get_freeEntry_idx(const char * filename){
     {
         struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry);
         if(strcmp(tmp->filename, filename) == 0){
-            eprintf("fs_create: @filename already exists error\n");
+            // eprintf("fs_create: @filename already exists error\n");
             return -1;
         }
         if(tmp->filename[0] == 0)
             break;
     }
     if(i == FS_FILE_MAX_COUNT){
-        eprintf("fs_create: root directory full error\n");
+        // eprintf("fs_create: root directory full error\n");
         return -1;
     }
     return i;
@@ -747,7 +747,7 @@ int fs_write(int fd, void *buf, size_t count)
 {
     /* TODO: Phase 4 */
     if(!is_valid_fd(fd)) return -1;
-    if(sp->data_blk_count == sp->fat_used ) return -1;
+    if(sp->data_blk_count == sp->fat_used ) return 0; // not error -1; return "written" count 0;
 
     struct RootDirEntry * w_dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
     if(w_dir_entry->unused[0] == 'w') return -1; // others are writing this file
