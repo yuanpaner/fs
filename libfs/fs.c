@@ -790,7 +790,7 @@ int fs_write(int fd, void *buf, size_t count)
     int blk_more = blk_new - blk_old;
     if(blk_more > sp->data_blk_count - sp->fat_used){
         blk_more = sp->data_blk_count - sp->fat_used;
-        real_count = blk_new * BLOCK_SIZE - w_dir_entry->file_sz;
+        real_count = (blk_more + blk_old) * BLOCK_SIZE - w_dir_entry->file_sz;
     }
         
 
