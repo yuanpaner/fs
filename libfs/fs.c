@@ -796,8 +796,9 @@ int fs_write(int fd, void *buf, size_t count)
         while(blk_more > 0){
             int next = get_freeFat_idx();
             if(next == -1) break; // no valid fat; actually impossible
-
-            *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
+            uint16_t * fat_entry = get_fat(dir_entry->last_data_blk);
+            *fat_entry = next;
+            // *(get_fat(dir_entry->last_data_blk)) = next ; // update the fat chain
             dir_entry->last_data_blk = next;
             blk_more -= 1;
             // sp->fat_used += 1;
