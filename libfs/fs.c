@@ -634,7 +634,7 @@ int fs_open(const char *filename)
     int fd = get_valid_fd();
     filedes[fd] = malloc(sizeof(struct FileDescriptor));
     filedes[fd]->file_entry = dir_entry;
-    // filedes[fd]->offset = 0;
+    filedes[fd]->offset = 0;
     if(fs_lseek(fd, fs_stat(fd)) < 0)
         return -1; 
 
@@ -842,6 +842,8 @@ int fs_write(int fd, void *buf, size_t count)
 
     if(block_read(sp->data_blk + old_last, bounce_buffer) < 0) return -1; // should free bounce_buffer before return -1
     // size_t truncate = strlen(bounce_buffer); // or should I use truncate = w_dir_entry->file_sz % BLOCK_SIZE // error
+    if(fs_lseek(fd, fs_stat(fd)) < 0)
+        return -1; 
     size_t truncate = (filedes[fd]->offset) % BLOCK_SIZE;
     size_t buf_idx = clamp(BLOCK_SIZE - truncate, real_count);
     memcpy(bounce_buffer + truncate, buf, buf_idx);
