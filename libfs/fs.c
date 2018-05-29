@@ -373,11 +373,10 @@ int fs_mount(const char *diskname)
     // if(init_alloc() < 0) return -1; // allocate error
 
     sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
-    if(sp == NULL) return -1; 
+    if(sp == NULL) { clear(); return -1; }
 
     memset(sp, 0, BLOCK_SIZE);
-    if(block_read(0, (void *)sp) < 0) 
-        return -1;
+    if(block_read(0, (void *)sp) < 0) { clear(); return -1; }
     // if(sp->fat_used == 0)
     //     sp->fat_used = 1;
     // sp_setup();
@@ -386,7 +385,8 @@ int fs_mount(const char *diskname)
     memset(root_dir, 0, BLOCK_SIZE);
     if(block_read(sp->rdir_blk, root_dir) < 0){
         eprintf("fs_mount read root dir error\n");
-        return -1;
+        clear(); 
+        return -1; }
     }
     // dir_entry = (struct RootDirEntry *)root_dir;
     dir_entry = get_dir(0);
@@ -398,6 +398,7 @@ int fs_mount(const char *diskname)
     {
         if(block_read(i+1, fat + BLOCK_SIZE * i) < 0){
             eprintf("fs_mount read %d th(from 1) fat block error\n", i);
+            clear();
             return -1;
         }
     }
