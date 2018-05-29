@@ -27,6 +27,12 @@ int fs_write(int fd, void *buf, size_t count);
 int fs_read(int fd, void *buf, size_t count);
 ```
 
+- [ ] https://stackoverflow.com/questions/11830979/c-strcpy-function-copies-null  
+about filename and memory copy  
+
+- [ ] http://www.runoob.com/linux/linux-shell-passing-arguments.html  
+shell tutorial  
+
 ## General Framework
 
 ## Mounting/unmounting
@@ -114,6 +120,15 @@ https://stackoverflow.com/questions/2898364/strcpy-vs-memcpy
 align in C  
 https://wr.informatik.uni-hamburg.de/_media/teaching/wintersemester_2013_2014/epc-14-haase-svenhendrik-alignmentinc-paper.pdf  
 
+Cstring in C, null terminator  
+https://stackoverflow.com/questions/17522327/is-null-character-included-while-allocating-using-malloc  
+Conceptually the null terminator is just a convenient way of marking the end of a string. The C standard library exploits this convention when modelling a string. For example, strlen computes the length of a string by examining the memory from the input location (probably a char*) until it reaches a null terminator; but the null terminator itself is not included in the length. But it's still part of the memory consumed by the string.  
+
+Calloc and malloc  
+https://www.tutorialspoint.com/c_standard_library/c_function_calloc.htm  
+strcpy, strncpy, memset, memcpy  
+https://stackoverflow.com/questions/11830979/c-strcpy-function-copies-null  
+
 
 struct stat, and fstat  
 http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html  
@@ -157,14 +172,16 @@ For example, if I add a file ../filename to the test.fs. Should I add it as "fil
 Your program should be able to handle filenames no larger than 16 bytes  
 And my question is more about the requirement, like if we add a file from the parent folder (../), which filename are we expected to use, "../filename", or just "filename" ?   
 I think I got it.  
-<br>FYI. I use fs_ref.x to try that, and it shows, using "../filename", although I think it a little weird.   
-In my opinion, the file in the virtual disk is an independent new file unrelated to the copied one, and we should remove the absolute path included in the filename. But for this assignment I think it understandable to keep it, for testing conveniently.</br>  
+<strong>FYI. I use fs_ref.x to try that, and it shows, using "../filename", although I think it a little weird.   
+In my opinion, the file in the virtual disk is an independent new file unrelated to the copied one, and we should remove the absolute path included in the filename. But for this assignment I think it understandable to keep it, for testing conveniently.</strong>  
 piazza @499 answered by Joël  
 Whatever filename is received by fs_create() is the correct filename that your library should use.  
 
 15-char name, added, pass  
 16-char name, unable to added, pass  
 name with space,  added,  pass   
+
+- [ ] filename which is not null terminator ? char array? try
 
 
 - [X] info, ls

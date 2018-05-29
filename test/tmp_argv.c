@@ -15,6 +15,33 @@ const char m2[6] = "info 1";
 //gcc -o tmp_argv tmp_argv.c 
 int main(int argc, char **argv)
 {
+    char * testnull = malloc(10);
+    // memset(testnull, 0, 10);
+    printf("string len of m1=%lu\n", strlen(m1));
+    printf("m1=%s\n", m1);
+    if(m1[strlen(m1)] == 0)
+        printf("m1[strlen(m1)]  is null\n");
+    else printf("m1[strlen(m1)] =%c\n", testnull[9]);
+
+    memcpy(testnull, m1, 9);
+    printf("testnull=%s\n", testnull);
+    printf("string len of testnull=%lu\n", strlen(testnull));
+    if(testnull[9] == 0)
+        printf("testnull[9] is null\n");
+    else printf("testnull[9]=%c\n", testnull[9]);
+
+    printf("-------\n");
+    char * testnonnull = malloc(9);
+    memset(testnonnull, 0, 9);
+    printf("string len of testnonnull after memset all 0=%lu\n", strlen(testnonnull));
+    memcpy(testnonnull, m1, 9);
+    printf("testnull=%s\n", testnull);
+    printf("string len of testnull after memcpy=%lu\n", strlen(testnonnull));
+    if(testnonnull[9] == 0)
+        printf("testnull[9] is null\n");
+    else printf("testnull[9]=%c\n", testnonnull[9]);
+    return 0;
+
     /* realloc */
     char * cstr = NULL;
     void *nullstr;
