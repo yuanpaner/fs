@@ -33,6 +33,8 @@ about filename and memory copy
 - [ ] http://www.runoob.com/linux/linux-shell-passing-arguments.html  
 shell tutorial  
 
+- [ ] it fail my own test_fs_yuan.sh when adding clear(), check the script and code; another branch is good  
+
 ## General Framework
 
 ## Mounting/unmounting

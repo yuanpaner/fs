@@ -365,7 +365,7 @@ int init_alloc(){
 */
 
 
-/* version 1. 0  */
+/* version 1. 0  
 int fs_mount(const char *diskname)
 {
 	if (block_disk_open(diskname) != 0) return -1;
@@ -428,9 +428,9 @@ int fs_mount(const char *diskname)
 
 	return 0;
 }
+*/
 
-
-/* version 2.0 fail , it fails at info
+/* version 2.0 fail , it fails at info */
 int fs_mount(const char *diskname)
 {
     if (block_disk_open(diskname) != 0) return -1;
@@ -473,7 +473,7 @@ int fs_mount(const char *diskname)
 
     return 0;
 }
-*/
+/**/
 /**
  * fs_umount - Unmount file system
  *
@@ -565,7 +565,10 @@ int fs_umount(void)
  */
 int fs_info(void)
 {
-	/* TODO: Phase 1 */
+	if(sp == NULL ) {
+        oprintf("no underlying virtual disk was mounted sucessfully\n");
+        return -1;
+    }
     oprintf("FS Info:\n");
     // eprintf("signature=%s\n",sp->signature); // non-terminator
     // eprintf("%.*s\n", 8, sp->signature); // works
