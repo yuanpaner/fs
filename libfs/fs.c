@@ -356,9 +356,9 @@ int fs_mount(const char *diskname)
  *
  * Return: -1 if no underlying virtual disk was opened, or if the virtual disk
  * cannot be closed, or if there are still open file descriptors. 0 otherwise.
- */
 
-/**
+
+
 This function unmounts your file system from a virtual disk with name disk_name.  
 
 need to write back all meta-information so that the disk persistently reflects all changes that were made to the file system (such as new files that are created, data that is written, ...). 
@@ -373,6 +373,9 @@ int fs_umount(void)
 {
     /* TODO: Phase 1 */
 	/* write back: super block, fat, dir*/
+    if(sp == NULL)
+        return -1;  // no underlying virtual disk was opened
+
     if(block_write(0, (void *)sp) < 0)
     {
         eprintf("fs_umount write back sp error\n");
@@ -392,10 +395,23 @@ int fs_umount(void)
         }
     }
 
-
-    if(block_disk_close() < 0) {
-        eprintf("fs_umount error\n");
+    if(fd_cnt > 0){
+        eprintf("there are files open, unable to umount\n");
         return -1;
+    }
+    // for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+    // {
+    //     if(filedes[i] != NULL){
+    //         free(filedes[i]);
+    //         filedes[i] = NULL; 
+    //     }
+            
+    // }
+
+
+    if(block_disk_close() < 0) { //cannot be closed
+        eprintf("fs_umount error\n");
+        return -1; 
     }
 
     if(sp) {
@@ -412,17 +428,16 @@ int fs_umount(void)
         fat = NULL;
     }
 
-    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
-    {
-        if(filedes[i] != NULL){
-            free(filedes[i]);
-            filedes[i] = NULL; 
-        }
+    // for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+    // {
+    //     if(filedes[i] != NULL){
+    //         free(filedes[i]);
+    //         filedes[i] = NULL; 
+    //     }
             
-    }
-    fd_cnt = 0;
+    // }
+    // fd_cnt = 0;
 
-    // todo: close all the file descriptors
 
     return 0;
 }

@@ -157,6 +157,9 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 
 ## Test output
 
+- [ ] unmount "cannot be closed, or if there are still open file descriptors."  
+
+
 - [ ] should module the metadata writing to a function and invoke each time any data updated, instead of only put in fs_unmount  
 piazza @424  
 Update by prof: as a general rule, there's only so much that an API can do. If the API imposes a sequence of operations (eg call mount() and unmount() at the end), then it's up to the client to respect such sequence.   
