@@ -292,6 +292,32 @@ void sp_setup(){
     //     sp->fat_used = 1;
 }
 
+void clear(){
+    if(sp) {
+        free(sp);
+        sp = NULL;
+    }
+    if(root_dir){
+        free(root_dir);
+        root_dir = NULL;
+    }
+    if(fat)
+    {
+        free(fat);
+        fat = NULL;
+    }
+
+    // char * disk = NULL; //virtual disk name pointer
+    // struct SuperBlock * sp = NULL;  // superblock pointer
+    // void * root_dir = NULL;         // root directory pointer
+    // struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
+    // void * fat = NULL;              //FAT block pointer
+    // uint16_t * fat16 = NULL;        //fat array entry pointer
+
+    // int fd_cnt = 0;     // fd used number
+    // struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
+}
+
 /*
  * alloc space to sp, root_dir, and fat; set to zero for all of them
  * initialize filedes, fd_cnt
@@ -331,31 +357,7 @@ int init_alloc(){
  * free space to sp, root_dir, and fat; set to zero for all of them
  * fail return -1; succeed return 0;
 */
-void clear(){
-    if(sp) {
-        free(sp);
-        sp = NULL;
-    }
-    if(root_dir){
-        free(root_dir);
-        root_dir = NULL;
-    }
-    if(fat)
-    {
-        free(fat);
-        fat = NULL;
-    }
 
-    // char * disk = NULL; //virtual disk name pointer
-    // struct SuperBlock * sp = NULL;  // superblock pointer
-    // void * root_dir = NULL;         // root directory pointer
-    // struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
-    // void * fat = NULL;              //FAT block pointer
-    // uint16_t * fat16 = NULL;        //fat array entry pointer
-
-    // int fd_cnt = 0;     // fd used number
-    // struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
-}
 
 /* version 1. 0
 int fs_mount(const char *diskname)
