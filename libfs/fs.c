@@ -327,14 +327,14 @@ void clear(){
 int init_alloc(){
 
     bool done = true; 
-    // sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
-    sp = calloc(BLOCK_SIZE,1); 
+    sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
+    // sp = calloc(BLOCK_SIZE,1); 
     if(sp == NULL) done = false;
-    // root_dir = malloc(BLOCK_SIZE);
-    root_dir = calloc(BLOCK_SIZE,1);
+    root_dir = malloc(BLOCK_SIZE);
+    // root_dir = calloc(BLOCK_SIZE,1);
     if(root_dir == NULL) done = false;
-    // fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
-    fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
+    fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
+    // fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
     if(fat == NULL) done = false;
 
     if(!done) {
@@ -346,9 +346,9 @@ int init_alloc(){
         filedes[i] = NULL;
     fd_cnt = 0;
 
-    // memset(sp, 0, BLOCK_SIZE);
-    // memset(root_dir, 0, BLOCK_SIZE);
-    // memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);    
+    memset(sp, 0, BLOCK_SIZE);
+    memset(root_dir, 0, BLOCK_SIZE);
+    memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);    
     
     // dir_entry = get_dir(0);  
 
