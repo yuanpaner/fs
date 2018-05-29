@@ -974,7 +974,7 @@ int fs_write(int fd, void *buf, size_t count)
             // *(get_fat(w_dir_entry->last_data_blk)) = next ; // update the fat chain
             w_dir_entry->last_data_blk = next;
             blk_more -= 1;
-            // sp->fat_used += 1;
+            sp->fat_used += 1;
         }
         // if(blk_more != 0) // succeed to write all; error, fat entry migth be bigger than block entry
         //     real_count = (blk_new - blk_more) * BLOCK_SIZE - file_sz_old; // actually impossible
