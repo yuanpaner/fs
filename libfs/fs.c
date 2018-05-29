@@ -350,8 +350,9 @@ int init_alloc(){
     // memset(root_dir, 0, BLOCK_SIZE);
     // memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);    
     
-    // dir_entry = get_dir(0);    
-    
+    // dir_entry = get_dir(0);  
+
+    return 0;   
 }
 /*
  * free space to sp, root_dir, and fat; set to zero for all of them
