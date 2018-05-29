@@ -360,7 +360,7 @@ int init_alloc(){
 */
 
 
-/* version 1. 0
+/* version 1. 0 */
 int fs_mount(const char *diskname)
 {
 	if (block_disk_open(diskname) != 0) return -1;
@@ -423,10 +423,9 @@ int fs_mount(const char *diskname)
 	return 0;
 }
 
-*/
+/* version 2.0 fail
 int fs_mount(const char *diskname)
 {
-    /* TODO: Phase 1 */
     if (block_disk_open(diskname) != 0) return -1;
     
     // if(init_alloc() < 0) return -1; // allocate error
@@ -467,6 +466,9 @@ int fs_mount(const char *diskname)
 
     return 0;
 }
+*/
+
+
 /**
  * fs_umount - Unmount file system
  *
