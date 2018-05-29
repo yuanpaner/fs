@@ -364,21 +364,21 @@ int init_alloc(){
 int fs_mount(const char *diskname)
 {
 	if (block_disk_open(diskname) != 0) return -1;
-	
+	if(init_alloc() < 0) return -1;
     // if(init_alloc() < 0) return -1; // allocate error
 
-    sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
-    if(sp == NULL) return -1; 
+    // sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
+    // if(sp == NULL) return -1; 
 
-    memset(sp, 0, BLOCK_SIZE);
+    // memset(sp, 0, BLOCK_SIZE);
     if(block_read(0, (void *)sp) < 0) 
         return -1;
     // if(sp->fat_used == 0)
     //     sp->fat_used = 1;
     // sp_setup();
 
-    root_dir = malloc(BLOCK_SIZE);
-    memset(root_dir, 0, BLOCK_SIZE);
+    // root_dir = malloc(BLOCK_SIZE);
+    // memset(root_dir, 0, BLOCK_SIZE);
     if(block_read(sp->rdir_blk, root_dir) < 0){
         eprintf("fs_mount read root dir error\n");
         return -1;
@@ -387,8 +387,8 @@ int fs_mount(const char *diskname)
     dir_entry = get_dir(0);
     sp_setup();
 
-    fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
-    memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
+    // fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
+    // memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
     for (int i = 0; i < sp->fat_blk_count; ++i)
     {
         if(block_read(i+1, fat + BLOCK_SIZE * i) < 0){
@@ -398,10 +398,12 @@ int fs_mount(const char *diskname)
     }
     fat16 = get_fat(0);
 
-    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
-        filedes[i] = NULL;
+    // for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+    //     filedes[i] = NULL;
     
-    fd_cnt = 0;
+    // fd_cnt = 0;
+
+
     // memcpy(sp->signature,FS_NAME,8);
     // sp->total_blk_count = block_disk_count();
     // sp->fat_blk_count = sp->total_blk_count % BLOCK_SIZE - 2;
