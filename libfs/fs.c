@@ -25,7 +25,7 @@
 
 // 需要一个global var存储the currently mounted file system.
 
-// const static char FS_NAME[8] = "ECS150FS";
+const static char FS_NAME[8] = "ECS150FS";
 
 #define eprintf(format, ...) \
     fprintf (stderr, format, ##__VA_ARGS__)
@@ -264,6 +264,7 @@ uint16_t id_to_real_blk(int i){
  * Return: -1 if virtual disk file @diskname cannot be opened, or if no valid
  * file system can be located. 0 otherwise.
  */
+
  /* http://www.cs.ucsb.edu/~chris/teaching/cs170/projects/proj5.html
 With the mount operation, a file system becomes "ready for use." 
 You need to open the disk and then load the meta-information that is necessary to handle the file system operations that are discussed below. 
@@ -271,8 +272,9 @@ You need to open the disk and then load the meta-information that is necessary t
 void sp_setup(){
     if(sp == NULL || root_dir == NULL)
         return ;
-    // if(sp->fat_used != 0 && sp->rdir_used != 0)
-    //     return ;
+    if(sp->fat_used != 0 && sp->rdir_used != 0)
+        return ; // no need to set, has already been written
+
     dir_entry = root_dir;
     sp->fat_used = 1;
     sp->rdir_used = 0;
@@ -289,13 +291,82 @@ void sp_setup(){
     // if(sp->fat_used == 0)
     //     sp->fat_used = 1;
 }
+
+/*
+ * alloc space to sp, root_dir, and fat; set to zero for all of them
+ * initialize filedes, fd_cnt
+ * initialize sp_setup()
+ * fail return -1; succeed return 0;
+*/
+int init_alloc(){
+
+    bool done = true; 
+    // sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
+    sp = calloc(BLOCK_SIZE,1); 
+    if(sp == NULL) done = false;
+    // root_dir = malloc(BLOCK_SIZE);
+    root_dir = calloc(BLOCK_SIZE,1);
+    if(root_dir == NULL) done = false;
+    // fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
+    fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
+    if(fat == NULL) done = false;
+
+    if(!done) {
+        clear();
+        return -1;
+    }
+
+    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+        filedes[i] = NULL;
+    fd_cnt = 0;
+
+    // memset(sp, 0, BLOCK_SIZE);
+    // memset(root_dir, 0, BLOCK_SIZE);
+    // memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);    
+    
+    // dir_entry = get_dir(0);    
+    
+}
+/*
+ * free space to sp, root_dir, and fat; set to zero for all of them
+ * fail return -1; succeed return 0;
+*/
+void clear(){
+    if(sp) {
+        free(sp);
+        sp = NULL;
+    }
+    if(root_dir){
+        free(root_dir);
+        root_dir = NULL;
+    }
+    if(fat)
+    {
+        free(fat);
+        fat = NULL;
+    }
+
+    // char * disk = NULL; //virtual disk name pointer
+    // struct SuperBlock * sp = NULL;  // superblock pointer
+    // void * root_dir = NULL;         // root directory pointer
+    // struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
+    // void * fat = NULL;              //FAT block pointer
+    // uint16_t * fat16 = NULL;        //fat array entry pointer
+
+    // int fd_cnt = 0;     // fd used number
+    // struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
+}
+
+/* version 1. 0
 int fs_mount(const char *diskname)
 {
-	/* TODO: Phase 1 */
 	if (block_disk_open(diskname) != 0) return -1;
 	
+    // if(init_alloc() < 0) return -1; // allocate error
 
     sp = malloc(BLOCK_SIZE); // struct SuperBlock * super = malloc(BLOCK_SIZE); malloc(sizeof(struct SuperBlock))
+    if(sp == NULL) return -1; 
+
     memset(sp, 0, BLOCK_SIZE);
     if(block_read(0, (void *)sp) < 0) 
         return -1;
@@ -349,6 +420,46 @@ int fs_mount(const char *diskname)
 	return 0;
 }
 
+*/
+int fs_mount(const char *diskname)
+{
+    /* TODO: Phase 1 */
+    if (block_disk_open(diskname) != 0) return -1;
+    
+    if(init_alloc() < 0) return -1; // allocate error
+
+    if(block_read(0, (void *)sp) < 0) {
+        clear();
+        eprintf("fs_mount read superblock error\n");
+        return -1;
+    }
+    if(strncmp(sp->signature, FS_NAME, 8) != 0){
+        clear();
+        eprintf("fs_mount non ECS150FS file system\n");
+        return -1;
+    }
+    sp_setup();
+
+    if(block_read(sp->rdir_blk, root_dir) < 0){
+        eprintf("fs_mount read root dir error\n");
+        clear();
+        return -1;
+    }
+    // dir_entry = (struct RootDirEntry *)root_dir;
+    dir_entry = get_dir(0); // not necessary
+
+    for (int i = 0; i < sp->fat_blk_count; ++i)
+    {
+        if(block_read(i+1, fat + BLOCK_SIZE * i) < 0){
+            eprintf("fs_mount read %d th(from 1) fat block error\n", i);
+            clear();
+            return -1;
+        }
+    }
+    fat16 = get_fat(0);
+
+    return 0;
+}
 /**
  * fs_umount - Unmount file system
  *
@@ -415,19 +526,7 @@ int fs_umount(void)
         return -1; 
     }
 
-    if(sp) {
-        free(sp);
-        sp = NULL;
-    }
-    if(root_dir){
-        free(root_dir);
-        root_dir = NULL;
-    }
-    if(fat)
-    {
-        free(fat);
-        fat = NULL;
-    }
+    clear();
 
     // for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
     // {
@@ -455,7 +554,7 @@ int fs_info(void)
 	/* TODO: Phase 1 */
     oprintf("FS Info:\n");
     // eprintf("signature=%s\n",sp->signature); // non-terminator
-    eprintf("%.*s", 8, sp->signature);
+    // eprintf("%.*s\n", 8, sp->signature); // works
 
     oprintf("total_blk_count=%d\n",sp->total_blk_count);
     oprintf("fat_blk_count=%d\n",sp->fat_blk_count);
