@@ -61,6 +61,14 @@ void thread_fs_stat(void *arg)
 		die("Cannot stat file");
 	}
 	if (!stat) {
+		if(fs_close(fs_fd))
+		{
+			fs_umount();
+			die("Cannot close file");
+		}
+		printf("Size of file '%s' is %d bytes\n", filename, stat);
+		//add by yuan, not good to fix client's error in library
+
 		fs_umount();
 		/* Nothing to read, file is empty */
 		printf("Empty file\n");
