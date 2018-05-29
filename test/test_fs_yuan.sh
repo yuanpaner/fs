@@ -249,8 +249,8 @@ run_fs_xM_create() {
     local line_array=()
     local corr_array=()
 
-    run_test ./fs_ref.x ls test.fs
-    # run_test ./test_fs.x ls test.fs # why this doesn't work
+    # run_test ./fs_ref.x ls test.fs
+    run_test ./test_fs.x ls test.fs # why this doesn't work
     line_array+=("$(select_line "${STDOUT}" "2")")
     corr_array+=("file: test-file-1M, size: 1048576, data_blk: 1")
 
@@ -263,8 +263,8 @@ run_fs_xM_create() {
     # test info
     line_array=()
     corr_array=()
-    # run_test ./test_fs.x info test.fs
-    run_test ./fs_ref.x info test.fs
+    run_test ./test_fs.x info test.fs
+    # run_test ./fs_ref.x info test.fs
 
     line_array+=("$(select_line "${STDOUT}" "1")")
     line_array+=("$(select_line "${STDOUT}" "2")")
@@ -294,8 +294,8 @@ run_fs_xM_create() {
     corr_array=()
     run_tool timeout 2 ./test_fs.x rm test.fs test-file-1M
     run_tool timeout 2 ./test_fs.x add test.fs test-file-2M
-    # run_test ./test_fs.x ls test.fs
-    run_test ./fs_ref.x ls test.fs
+    run_test ./test_fs.x ls test.fs
+    # run_test ./fs_ref.x ls test.fs
 
     line_array+=("$(select_line "${STDOUT}" "2")")
     corr_array+=("file: test-file-2M, size: 1224704, data_blk: 1") # Wrote file 'test-file-5' (1224704/2097152 bytes)
@@ -308,8 +308,8 @@ run_fs_xM_create() {
     # test info
     line_array=()
     corr_array=()
-    # run_test ./test_fs.x info test.fs
-    run_test ./fs_ref.x info test.fs
+    run_test ./test_fs.x info test.fs
+    # run_test ./fs_ref.x info test.fs
 
     line_array+=("$(select_line "${STDOUT}" "1")")
     line_array+=("$(select_line "${STDOUT}" "2")")
