@@ -386,7 +386,7 @@ int fs_mount(const char *diskname)
     if(block_read(sp->rdir_blk, root_dir) < 0){
         eprintf("fs_mount read root dir error\n");
         clear(); 
-        return -1; }
+        return -1; 
     }
     // dir_entry = (struct RootDirEntry *)root_dir;
     dir_entry = get_dir(0);
