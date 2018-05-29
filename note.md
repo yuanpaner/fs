@@ -141,6 +141,13 @@ https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script
 
 
 ## Test output
+
+- [ ] should module the metadata writing to a function and invoke each time any data updated, instead of only put in fs_unmount  
+piazza @424  
+Update by prof: as a general rule, there's only so much that an API can do. If the API imposes a sequence of operations (eg call mount() and unmount() at the end), then it's up to the client to respect such sequence.   
+Be mindful that there are two kind of data that can be written while a disk is mounted: actual file data, and metadata (FAT entries and root directory entries). If it's OK that one is delayed, it probably doesn't make sense to delay the other one.  
+
+
 > fs_read  
 
 - [X] repeated filename    
@@ -152,13 +159,21 @@ And my question is more about the requirement, like if we add a file from the pa
 I think I got it.  
 <br>FYI. I use fs_ref.x to try that, and it shows, using "../filename", although I think it a little weird.   
 In my opinion, the file in the virtual disk is an independent new file unrelated to the copied one, and we should remove the absolute path included in the filename. But for this assignment I think it understandable to keep it, for testing conveniently.</br>  
+piazza @499 answered by Joël  
+Whatever filename is received by fs_create() is the correct filename that your library should use.  
+
 15-char name, added, pass  
 16-char name, unable to added, pass  
-name with space,  added,  pass 
+name with space,  added,  pass   
+
 
 - [X] info, ls
 - [ ] what is script  
-piazza 
+piazza @ 498  
+The "script" subcommand is used by the grading script to test your code. It isn't meant for you to use (unless you can figure out how to reverse-engineer it!).  
+
+Everything that this script subcommand does can be reproduced by coding your own testers.  
+
 
 - [ ] read with cat
 - [ ] read with offset? multiple read? Each has an independent offset.   
@@ -187,6 +202,10 @@ It's ok if I use `vim -R` to open a file(Readonly) simoutaneously.
 
 - [ ] add a "clean" to the test, remove all the files in the virtual disk
 
+- [ ] writing in the middle, with offset!!! 
+@496  
+We just overwrite the old content. -- by Bradley  
+That's when you realize that inserting a line in a text file technically moves the rest of the content farther. -- by Joël  
 
 
 - [X] write to full disk  
