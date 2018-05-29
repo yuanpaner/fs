@@ -78,7 +78,6 @@ struct RootDirEntry {                // Inode structure
     uint32_t    file_sz;          // Size of file
     uint16_t    first_data_blk; // Direct pointers
     uint16_t    last_data_blk; // Direct pointers
-    // uint8_t     frentry_idx;  //10 byte Unused/Padding
     uint8_t     open;
     char        unused[7];     
 }__attribute__((packed));
@@ -86,17 +85,17 @@ struct RootDirEntry {                // Inode structure
 struct FileDescriptor
 {
     void * file_entry;
-    // uint32_t offset;
     size_t offset;
 };
 
+/*
 union Block {
     struct SuperBlock   super;              // Superblock
     uint16_t            fat[BLOCK_SIZE/2];        
     struct RootDirEntry rootdir[FS_FILE_MAX_COUNT];   // Pointer block
     char                block[BLOCK_SIZE];     // Data block
 };
-
+*/
 
 
 char * disk = NULL; //virtual disk name pointer
@@ -244,10 +243,12 @@ int file_blk_count(uint32_t sz){
     else return k;
 }
 
+/* not used
 uint16_t id_to_real_blk(int i){
     // if sp == NULL || root_dir == NULL;
     return i + sp->data_blk;
-}
+} 
+*/
 
 
 /* TODO: Phase 1 */
@@ -453,7 +454,9 @@ int fs_info(void)
 {
 	/* TODO: Phase 1 */
     oprintf("FS Info:\n");
-    // eprintf("signature=%s\n",sp->signature);
+    // eprintf("signature=%s\n",sp->signature); // non-terminator
+    eprintf("%.*s", 8, sp->signature);
+
     oprintf("total_blk_count=%d\n",sp->total_blk_count);
     oprintf("fat_blk_count=%d\n",sp->fat_blk_count);
     oprintf("rdir_blk=%d\n",sp->rdir_blk);

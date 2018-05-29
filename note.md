@@ -132,7 +132,11 @@ https://stackoverflow.com/questions/11830979/c-strcpy-function-copies-null
 
 struct stat, and fstat  
 http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html  
-http://pubs.opengroup.org/onlinepubs/009695399/functions/fstat.html
+http://pubs.opengroup.org/onlinepubs/009695399/functions/fstat.html  
+
+Union  
+https://www.geeksforgeeks.org/difference-structure-union-c/  
+
 
 bash, shell, command  
 https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html  
