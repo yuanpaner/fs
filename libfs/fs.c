@@ -337,7 +337,7 @@ int init_alloc(){
     // fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
     if(fat == NULL) done = false;
 
-    if(!done) {
+    if(done == false) {
         clear();
         return -1;
     }
@@ -429,7 +429,11 @@ int fs_mount(const char *diskname)
     /* TODO: Phase 1 */
     if (block_disk_open(diskname) != 0) return -1;
     
-    if(init_alloc() < 0) return -1; // allocate error
+    // if(init_alloc() < 0) return -1; // allocate error
+    if(init_alloc() < 0) {
+        eprintf("alloc error\n");
+        return -1;
+    }
 
     if(block_read(0, (void *)sp) < 0) {
         clear();
