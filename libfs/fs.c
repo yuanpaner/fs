@@ -263,16 +263,14 @@ uint16_t id_to_real_blk(int i){
  *
  * Return: -1 if virtual disk file @diskname cannot be opened, or if no valid
  * file system can be located. 0 otherwise.
+
+ open the disk and then load the meta-information that is necessary to handle the file system operations
  */
 
- /* http://www.cs.ucsb.edu/~chris/teaching/cs170/projects/proj5.html
-With the mount operation, a file system becomes "ready for use." 
-You need to open the disk and then load the meta-information that is necessary to handle the file system operations that are discussed below. 
- */
 void sp_setup(){
     if(sp == NULL || root_dir == NULL)
         return ;
-    if(sp->fat_used != 0 && sp->rdir_used != 0)
+    if(sp->fat_used > 1 && sp->rdir_used > 0)
         return ; // no need to set, has already been written
 
     dir_entry = root_dir;
@@ -498,13 +496,11 @@ It is important to observe that your file system must provide persistent storage
 This means that whenever umount_fs is called, all meta-information and file data (that you could temporarily have only in memory; depending on your implementation) must be written out to disk.
 
 */ 
-int fs_umount(void)
-{
-    /* TODO: Phase 1 */
-	/* write back: super block, fat, dir*/
-    if(sp == NULL)
-        return -1;  // no underlying virtual disk was opened
-
+int write_meta(){
+    if(sp == NULL || root_dir == NULL || fat == NULL){
+        eprintf("no virtual disk mounted to write_meta");
+        return -1;
+    }
     if(block_write(0, (void *)sp) < 0)
     {
         eprintf("fs_umount write back sp error\n");
@@ -519,10 +515,38 @@ int fs_umount(void)
     {
         if(block_write(1 + i, fat + BLOCK_SIZE * i) < 0)// write back
         {
-            eprintf("fs_umount write back dir error\n");
+            eprintf("fs_umount write back fat blk %d error\n", i);
             return -1; 
         }
     }
+    return 0;
+}
+int fs_umount(void)
+{
+    /* TODO: Phase 1 */
+	/* write back: super block, fat, dir*/
+    if(sp == NULL)
+        return -1;  // no underlying virtual disk was opened
+
+    if(write_meta() < 0 ) return -1;
+    // if(block_write(0, (void *)sp) < 0)
+    // {
+    //     eprintf("fs_umount write back sp error\n");
+    //     return -1; 
+    // }
+    // if(block_write(sp->rdir_blk, root_dir) < 0)// write back
+    // {
+    //     eprintf("fs_umount write back dir error\n");
+    //     return -1; 
+    // }
+    // for (int i = 0; i < sp->fat_blk_count; ++i)
+    // {
+    //     if(block_write(1 + i, fat + BLOCK_SIZE * i) < 0)// write back
+    //     {
+    //         eprintf("fs_umount write back dir error\n");
+    //         return -1; 
+    //     }
+    // }
 
     if(fd_cnt > 0){
         eprintf("there are files open, unable to umount\n");
