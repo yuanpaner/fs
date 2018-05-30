@@ -748,7 +748,7 @@ int fs_delete(const char *filename)
         return -1;
     }
 
-    if(cur_entry->first != FAT_EOC){ // not empty file
+    if(cur_entry->first_data_blk != FAT_EOC){ // not empty file
         fat16 =  get_fat(cur_entry->first_data_blk);
         erase_fat(fat16); // how about return -1?
     }
@@ -1142,12 +1142,12 @@ int fs_read(int fd, void *buf, size_t count)
     if(real_count == 0)
         return 0;
 
-    uint16_t read_blk = get_offset_blk(offset);
+    uint16_t read_blk = get_offset_blk(fd, offset);
     if(read_blk == 0) return -1;
 
     //read first block
     int32_t real_count_temp = real_count;
-    void *bounce_buffer = calloc(BLOCK_SIZE);
+    void *bounce_buffer = calloc(BLOCK_SIZE, 1);
     int buf_idx = 0;
     if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0 ){
         free(bounce_buffer);
