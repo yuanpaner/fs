@@ -279,8 +279,8 @@ uint16_t id_to_real_blk(int i){
 void sp_setup(){
     if(sp == NULL || root_dir == NULL)
         return ;
-    if(sp->fat_used > 1 && sp->rdir_used > 0) // write correctly already
-        return ; // no need to set, has already been written
+    // if(sp->fat_used > 1 && sp->rdir_used > 0) // write correctly already
+    //     return ; // no need to set, has already been written
 
     dir_entry = root_dir;
     sp->fat_used = 1;
@@ -1092,6 +1092,7 @@ int fs_write(int fd, void *buf, size_t count)
 
     w_dir_entry->file_sz += real_count;
 
+    write_meta();
     return real_count;
 }
 
