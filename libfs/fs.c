@@ -748,8 +748,11 @@ int fs_delete(const char *filename)
         return -1;
     }
 
-    fat16 =  get_fat(cur_entry->first_data_blk);
-    erase_fat(fat16); // how about return -1?
+    if(cur_entry->first != FAT_EOC){ // not empty file
+        fat16 =  get_fat(cur_entry->first_data_blk);
+        erase_fat(fat16); // how about return -1?
+    }
+    
     memset(cur_entry, 0, sizeof(struct RootDirEntry));
 
     sp->rdir_used -= 1;
@@ -918,21 +921,27 @@ int fs_lseek(int fd, size_t offset)
 }
 
 
-//int fs_write(int fd, void *buf, size_t count)
-// int32_t get_offset_blk(int fd, size_t offset){
-//     if(!is_valid_fd(fd)){
-//         return -1; // impossible
-//     }
+// int fs_write(int fd, void *buf, size_t count)
+uint16_t get_offset_blk(int fd, size_t offset){
+    if(!is_valid_fd(fd)){
+        return 0; // impossible
+    }
 
-//     dir_entry = filedes[fd]->file_entry;
-//     if(offset > dir_entry->file_sz)
-//         return -1;
+    dir_entry = filedes[fd]->file_entry;
+    if(offset > dir_entry->file_sz){
+        eprintf("get_offset_blk fail: offset is larger than file size\n");
+        return 0;
+    }
+    
+    int no_blk = file_blk_count(offset);
+    uint16_t blk = dir_entry->first_data_blk;
+    while(no_blk > 1){ // need some error check
+        blk = *(get_fat(blk));
+        no_blk -= 1;
+    }
 
-//     uint16_t blk_idx = offset / BLOCK_SIZE;
-//     if(blk_idx * BLOCK_SIZE < offset)
-//         blk_idx += 1;
-
-// }
+    return no_blk; 
+}
 
 
 
@@ -1120,13 +1129,70 @@ int fs_write(int fd, void *buf, size_t count)
 
  int block_read(size_t block, void *buf);
  */
+
+
 int fs_read(int fd, void *buf, size_t count)
 {
-	/* TODO: Phase 4 */
+    /* TODO: Phase 4 */
     if(!is_valid_fd(fd)) return -1;
     dir_entry = filedes[fd]->file_entry;
 
-    size_t real_count = clamp(dir_entry->file_sz, count);
+    size_t offset = filedes[fd]->offset;
+    int32_t real_count = clamp(dir_entry->file_sz - offset, count);
+    if(real_count == 0)
+        return 0;
+
+    uint16_t read_blk = get_offset_blk(offset);
+    if(read_blk == 0) return -1;
+
+    //read first block
+    int32_t real_count_temp = real_count;
+    void *bounce_buffer = calloc(BLOCK_SIZE);
+    int buf_idx = 0;
+    if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0 ){
+        free(bounce_buffer);
+        return -1;
+    }
+    memcpy(buf + buf_idx, bounce_buffer, clamp(real_count_temp, BLOCK_SIZE));
+
+    buf_idx += clamp(real_count_temp, BLOCK_SIZE);
+    real_count_temp -= BLOCK_SIZE; // remaining
+    read_blk = *(get_fat(read_blk));
+
+    while(real_count_temp > 0 && read_blk != FAT_EOC){
+        if(real_count_temp >= BLOCK_SIZE){
+            if(block_read(read_blk + sp->data_blk, buf + buf_idx) < 0){
+                free(bounce_buffer);
+                return -1;
+            }
+            buf_idx += BLOCK_SIZE;
+        }
+        else{
+            if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0){
+                free(bounce_buffer);
+                return -1;
+            }
+            memcpy(buf + buf_idx, bounce_buffer, real_count_temp);
+            buf_idx += real_count_temp; // unnecessary acutally
+        }
+        real_count_temp -= BLOCK_SIZE;
+        read_blk = *(get_fat(read_blk));
+    }
+
+    free(bounce_buffer);
+    if(fs_lseek(fd, real_count + offset) < 0) return -1;
+
+    return real_count;
+}
+
+/* version 1.0 without offset
+int fs_read(int fd, void *buf, size_t count)
+{
+    if(!is_valid_fd(fd)) return -1;
+    dir_entry = filedes[fd]->file_entry;
+
+    size_t offset = filedes[fd]->offset;
+    size_t real_count = clamp(dir_entry->file_sz - offset, count);
     void *bounce_buffer = malloc(BLOCK_SIZE);
     int i = 0;
     uint16_t temp_blk_id = dir_entry->first_data_blk; 
@@ -1151,4 +1217,4 @@ int fs_read(int fd, void *buf, size_t count)
  
     return real_count;
 }
-
+*/
