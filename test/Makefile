@@ -71,7 +71,7 @@ $(libfs):
 clean:
 	@echo "CLEAN	$(CUR_PWD)"
 	$(Q)$(MAKE) V=$(V) -C $(FSPATH) clean
-	$(Q)rm -rf $(objs) $(deps) $(programs) README.html
+	$(Q)rm -rf $(objs) $(deps) $(programs)
 	$(Q)rm -f *.out *.html output* # py, test
 # Keep object files around
 .PRECIOUS: %.o

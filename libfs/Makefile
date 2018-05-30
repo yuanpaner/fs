@@ -3,11 +3,11 @@ lib := libfs.a
 
 all: $(lib)
 
-objs = disk.o fs.o
-deps = $(objs:.o=.h)
+CUR_PWD := $(shell pwd)
 
 CC := gcc
 CFLAGS	:= -Wall -Werror
+
 ifneq ($(D),1)
 CFLAGS	+= -O2
 else
@@ -20,19 +20,23 @@ Q = @
 V = 0
 endif
 
-
-%.o: %.c
-	@echo "CC	$@"
-	$(Q)$(CC) $(CFLAGS) -O -c $< $(deps)
+objs := $(patsubst %.o)
+# objs := disk.o fs.o
+deps := $(objs:.o=.h)
 
 $(lib): $(objs)
 	@echo "AR $@"
 	ar rcs $@ $^
 
+%.o: %.c
+	@echo "CC	$@"
+	$(Q)$(CC) $(CFLAGS) -O -c $< $(deps)
+
 
 clean: 
-	@echo "clean"
-	$(Q)rm -f *.a *.gch *.o
+	@echo "CLEAN $(CUR_PWD)"
+	$(Q)rm -f $(lib) $(objs) $(deps)
+	# $(Q)rm -f *.a *.gch *.o
 
 
 
