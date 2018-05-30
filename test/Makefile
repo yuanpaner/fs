@@ -1,6 +1,6 @@
 # Target programs
 programs :=		\
-	test_fs.x
+	test_fs_mod.x
 
 # File-system library
 FSLIB := libfs
