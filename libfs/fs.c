@@ -195,7 +195,7 @@ int file_blk_count(uint32_t sz){
  * check the duplicated existed filename by @filename
  * return index number; -1 if fail. set the entry_ptr address 
  */
-int get_valid_directory_entry(const char * filename, void * entry_ptr = NULL){
+int get_valid_directory_entry(const char * filename, void * entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
@@ -215,12 +215,13 @@ int get_valid_directory_entry(const char * filename, void * entry_ptr = NULL){
         return -1;
     }
 
-    entry_ptr = root_dir + i * sizeof(struct RootDirEntry);
+    if(entry_ptr)
+        entry_ptr = root_dir + i * sizeof(struct RootDirEntry);
     return i;
 }
 
 /* get the dir entry id by filename*/
-int get_directory_entry(const char * filename, void * entry_ptr = NULL){
+int get_directory_entry(const char * filename, void * entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
@@ -230,7 +231,8 @@ int get_directory_entry(const char * filename, void * entry_ptr = NULL){
         struct RootDirEntry * tmp = get_dir(i);
 
         if(strcmp(tmp->filename, filename) == 0){
-            entry_ptr = tmp;
+            if(entry_ptr)
+                entry_ptr = tmp;
             return i;
         }
     }
@@ -316,7 +318,7 @@ void clear(){
         fat = NULL;
     }
 
-
+    if(disk) free(disk);
     disk = NULL;
     dir_entry = NULL;
     fat16 = NULL;
@@ -327,7 +329,7 @@ void clear(){
         if(filedes[i] != NULL) // should n't happen actually
         {
             free(filedes[i]);
-            fildes = NULL;
+            filedes = NULL;
             eprintf("alert file descriptor %d is not clear\n",i);
         }
     }
@@ -448,7 +450,8 @@ int fs_mount(const char *diskname)
         filedes[i] = NULL;
     fd_cnt = 0;
 
-    disk = diskname;
+    disk = malloc(strlen(diskname) + 1);
+    strcpy(disk, diskname);
 
 	return 0;
 }
@@ -689,7 +692,7 @@ int fs_create(const char *filename)
     //     eprintf("fs_create: root directory full error\n");
     //     return -1;
     // }
-    int entry_id = get_valid_directory_entry(filename);
+    int entry_id = get_valid_directory_entry(filename, NULL);
     if(entry_id < 0)
         return -1; // no valid dir entry 
     // the ith entry is available
@@ -734,7 +737,7 @@ int fs_delete(const char *filename)
 {
 	/* TODO: Phase 2 */
     struct RootDirEntry * cur_entry = NULL;
-    int entry_id = get_directory_entry(filename, cur_entry);
+    int entry_id = get_directory_entry(filename, (void *)cur_entry);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
 
@@ -805,7 +808,7 @@ int fs_ls(void)
 int fs_open(const char *filename)
 {
 	/* TODO: Phase 3 */
-    if(fd_cnt >= FS_OPEN_MAX_COUNT || filename = NULL || strlen(filename) >= FS_FILENAME_LEN)
+    if(fd_cnt >= FS_OPEN_MAX_COUNT || filename == NULL || strlen(filename) >= FS_FILENAME_LEN)
         return -1;
 
     int entry_id = get_directory_entry(filename);
