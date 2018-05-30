@@ -20,9 +20,14 @@ Q = @
 V = 0
 endif
 
+# Generate dependencies
+DEPFLAGS = -MMD -MF $(@:.o=.d)
+
 objs := $(patsubst %.c, %.o, $(wildcard *.c))
 # objs := disk.o fs.o
-deps := $(objs:.o=.h)
+# deps := $(objs:.o=.h)
+deps := $(patsubst %.o,%.d,$(objs))
+-include $(deps)
 
 $(lib): $(objs)
 	@echo "AR $@"
@@ -30,7 +35,7 @@ $(lib): $(objs)
 
 %.o: %.c
 	@echo "CC	$@"
-	$(Q)$(CC) $(CFLAGS) -O -c $< $(deps)
+	$(Q)$(CC) $(CFLAGS) -O -c $< $(DEPFLAGS)
 
 
 clean: 
