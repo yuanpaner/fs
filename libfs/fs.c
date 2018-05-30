@@ -329,7 +329,7 @@ void clear(){
         if(filedes[i] != NULL) // should n't happen actually
         {
             free(filedes[i]);
-            filedes = NULL;
+            filedes[i] = NULL;
             eprintf("alert file descriptor %d is not clear\n",i);
         }
     }
@@ -811,7 +811,7 @@ int fs_open(const char *filename)
     if(fd_cnt >= FS_OPEN_MAX_COUNT || filename == NULL || strlen(filename) >= FS_FILENAME_LEN)
         return -1;
 
-    int entry_id = get_directory_entry(filename);
+    int entry_id = get_directory_entry(filename, NULL);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
 
