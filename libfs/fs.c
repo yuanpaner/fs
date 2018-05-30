@@ -753,6 +753,7 @@ int fs_delete(const char *filename)
     memset(cur_entry, 0, sizeof(struct RootDirEntry));
 
     sp->rdir_used -= 1;
+    write_meta();
     return 0;
 }
 
