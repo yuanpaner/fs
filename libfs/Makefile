@@ -20,7 +20,7 @@ Q = @
 V = 0
 endif
 
-objs := $(patsubst %.o)
+objs := $(patsubst %.c, %.o, $(wildcard *.c))
 # objs := disk.o fs.o
 deps := $(objs:.o=.h)
 
