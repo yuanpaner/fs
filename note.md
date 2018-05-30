@@ -69,6 +69,8 @@ However the memory pointed to by a char* need not be NULL terminated character a
 https://stackoverflow.com/questions/47288881/are-c-constant-character-strings-always-null-terminated  
 https://softwareengineering.stackexchange.com/questions/344603/are-c-strings-always-null-terminated-or-does-it-depend-on-the-platform  
 
+@520 RW fails doesn't mean disk fails, good points  
+block_write failing doesn't always mean disk failure, it could just be the block that failed.
 
   
 ## Source
@@ -199,6 +201,9 @@ piazza @ 498
 The "script" subcommand is used by the grading script to test your code. It isn't meant for you to use (unless you can figure out how to reverse-engineer it!).  
 
 Everything that this script subcommand does can be reproduced by coding your own testers.  
+
+
+- [ ] file delete with the fat erase  
 
 
 - [ ] read with cat
