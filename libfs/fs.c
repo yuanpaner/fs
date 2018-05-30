@@ -88,21 +88,6 @@ struct FileDescriptor
     size_t offset;
 };
 
-//int fs_write(int fd, void *buf, size_t count)
-int32_t get_offset_blk(int fd, size_t offset){
-    if(!is_valid_fd(fd)){
-        return -1; // impossible
-    }
-
-    dir_entry = filedes[fd]->file_entry;
-    if(offset > dir_entry->file_sz)
-        return -1;
-
-    uint16_t blk_idx = offset / BLOCK_SIZE;
-    if(blk_idx * BLOCK_SIZE < offset)
-        blk_idx += 1;
-
-}
 
 /*
 union Block {
@@ -927,6 +912,24 @@ int fs_lseek(int fd, size_t offset)
 
     return 0;
 }
+
+
+//int fs_write(int fd, void *buf, size_t count)
+// int32_t get_offset_blk(int fd, size_t offset){
+//     if(!is_valid_fd(fd)){
+//         return -1; // impossible
+//     }
+
+//     dir_entry = filedes[fd]->file_entry;
+//     if(offset > dir_entry->file_sz)
+//         return -1;
+
+//     uint16_t blk_idx = offset / BLOCK_SIZE;
+//     if(blk_idx * BLOCK_SIZE < offset)
+//         blk_idx += 1;
+
+// }
+
 
 
 /**
