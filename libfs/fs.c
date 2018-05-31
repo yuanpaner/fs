@@ -1010,7 +1010,7 @@ int fs_write(int fd, void *buf, size_t count)
         new_blk[expand++] = write_blk;
     }
     else {
-        write_blk = get_offset_blk(int fd, size_t offset);
+        write_blk = get_offset_blk(fd, offset);
     }
 
     void * bounce_buffer = calloc(BLOCK_SIZE, 1);
@@ -1033,6 +1033,9 @@ int fs_write(int fd, void *buf, size_t count)
     while(leftover_count > 0){
         // get the next written block
         if(expand > 0){
+            int32_t temp = get_free_blk_idx();
+            if(temp < 0) 
+                break; // no more block
             write_blk = (uint16_t) temp;
             new_blk[expand++] = write_blk;
         }
@@ -1081,7 +1084,7 @@ int fs_write(int fd, void *buf, size_t count)
     fat16 = get_fat(w_dir_entry->last_data_blk);
     size_t i = 0;
     while(expand > 0){
-        *fat16 = new_blk[i]
+        *fat16 = new_blk[i];
         fat16 = get_fat(new_blk[i]);
 
         i += 1;
