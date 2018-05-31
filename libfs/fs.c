@@ -1005,7 +1005,7 @@ int fs_write(int fd, void *buf, size_t count)
 
     if( w_dir_entry->first_data_blk == FAT_EOC){ // empty file, no blk assign
         int32_t temp = get_free_blk_idx();
-        if(temp < 0) return -1;
+        if(temp < 0) return 0;
 
         w_dir_entry->first_data_blk = (uint16_t)temp;
         w_dir_entry->last_data_blk = (uint16_t)temp;
@@ -1029,7 +1029,7 @@ int fs_write(int fd, void *buf, size_t count)
 
         if(temp < 0) {
             w_dir_entry->unused[0] = 'n';
-            return -1; // no block available
+            return 0; // no block available
         }
 
         write_blk = (uint16_t) temp;
@@ -1044,7 +1044,7 @@ int fs_write(int fd, void *buf, size_t count)
     if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
         free(bounce_buffer);
         w_dir_entry->unused[0] = 'n';
-        return -1;
+        return 0;
     }
 
     buf_idx = clamp(BLOCK_SIZE - w_dir_entry->file_sz % BLOCK_SIZE, leftover_count);
@@ -1053,8 +1053,10 @@ int fs_write(int fd, void *buf, size_t count)
     if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
         w_dir_entry->unused[0] = 'n';
         free(bounce_buffer);
-        return -1;
+        return 0;
     } // write the first blk
+
+
     
     while(leftover_count > 0){
         // get the next written block
@@ -1080,7 +1082,7 @@ int fs_write(int fd, void *buf, size_t count)
             if(block_write(sp->data_blk + write_blk, buf + buf_idx) < 0){
                 w_dir_entry->unused[0] = 'n';
                 free(bounce_buffer);
-                return -1;
+                return 0;
             }
             buf_idx += BLOCK_SIZE;
 
@@ -1089,13 +1091,13 @@ int fs_write(int fd, void *buf, size_t count)
             if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
                 free(bounce_buffer);
                 w_dir_entry->unused[0] = 'n';
-                return -1;
+                return 0;
             }
             memcpy(bounce_buffer, buf + buf_idx, leftover_count);
             if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
                 free(bounce_buffer);
                 w_dir_entry->unused[0] = 'n';
-                return -1;
+                return 0;
             }
         }
         leftover_count -= BLOCK_SIZE;
