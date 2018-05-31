@@ -158,7 +158,8 @@ int32_t get_free_blk_idx(){
         if (*tmp == 0 )
             return (int32_t)i;
     // if( i == sp->fat_blk_count * BLOCK_SIZE / 2)
-    if( i == sp->data_blk_count)
+        
+    // if( i == sp->data_blk_count)
         // eprintf("fat exhausted\n");
 
     return -1;
