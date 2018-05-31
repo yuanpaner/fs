@@ -765,6 +765,7 @@ int fs_delete(const char *filename)
 
     sp->rdir_used -= 1;
     write_meta();
+
     return 0;
 }
 
@@ -1094,13 +1095,15 @@ int fs_write(int fd, void *buf, size_t count)
     while(expand > 0){
         *fat16 = new_blk[i];
         fat16 = get_fat(new_blk[i]);
+        w_dir_entry->last_data_blk = new_blk[i];
 
         i += 1;
         expand -= 1;
     }
     *fat16 = 0xFFFF;
-    write_meta();
 
+
+    write_meta();
     w_dir_entry->unused[0] = 'n';
     if(bounce_buffer) free(bounce_buffer);
     
