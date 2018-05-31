@@ -1291,7 +1291,9 @@ int fs_read(int fd, void *buf, size_t count)
 
     //read first block
     int32_t real_count_temp = real_count;
-    void *bounce_buffer = calloc(BLOCK_SIZE, 1);
+    // void *bounce_buffer = calloc(BLOCK_SIZE, 1);
+    void *bounce_buffer = malloc(BLOCK_SIZE);
+    memset(bounce_buffer, 0, BLOCK_SIZE);
     int buf_idx = 0;
     if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0 ){
         free(bounce_buffer);
