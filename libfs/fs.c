@@ -158,7 +158,7 @@ uint16_t * get_fat(int id){
 
 /* get next free data block
  */
-uint16_t get_free_blk_idx(){
+int32_t get_free_blk_idx(){
     if(fat == NULL || sp == NULL)
         return -1;
     if(sp->data_blk_count - sp->fat_used == 0) {
@@ -173,7 +173,7 @@ uint16_t get_free_blk_idx(){
     // for (; i < sp->fat_blk_count * BLOCK_SIZE / 2 ; ++i, tmp++)
     for (; i < sp->data_blk_count ; ++i, tmp++)
         if (*tmp == 0 )
-            return i;
+            return (int32_t)i;
     // if( i == sp->fat_blk_count * BLOCK_SIZE / 2)
     if( i == sp->data_blk_count)
         eprintf("fat exhausted\n");
@@ -928,19 +928,19 @@ uint16_t get_offset_blk(int fd, size_t offset){
     }
 
     dir_entry = filedes[fd]->file_entry;
-    if(offset > dir_entry->file_sz){
-        eprintf("get_offset_blk fail: offset is larger than file size\n");
+    if(offset >= dir_entry->file_sz){
+        // eprintf("get_offset_blk fail: offset is larger than file size\n");
         return 0;
     }
     
     int no_blk = file_blk_count(offset);
     uint16_t blk = dir_entry->first_data_blk;
     while(no_blk > 1){ // need some error check
-        blk = *(get_fat(blk));
+        blk = *(get_fat(blk)); //impossible NULL pointer
         no_blk -= 1;
     }
 
-    return no_blk; 
+    return blk; 
 }
 
 
@@ -971,7 +971,136 @@ uint16_t get_offset_blk(int fd, size_t offset){
  */
 int fs_write(int fd, void *buf, size_t count)
 {
-    /* TODO: Phase 4 */
+    if(!is_valid_fd(fd)) return -1;
+
+    struct RootDirEntry * w_dir_entry = filedes[fd]->file_entry;
+    if(w_dir_entry->unused[0] == 'w'){
+        eprintf("other writing continues, unable to write\n");
+        return -1;
+    }
+    w_dir_entry->unused[0] = 'w';
+
+    if( w_dir_entry->first_data_blk == FAT_EOC){ // empty file, no blk assign
+        int32_t temp = get_free_blk_idx();
+        if(temp < 0) return -1;
+
+        w_dir_entry->first_data_blk = (uint16_t)temp;
+        w_dir_entry->last_data_blk = (uint16_t)temp;
+        fat16 = get_fat(w_dir_entry->first_data_blk);
+        *fat16 = 0xFFFF;
+        sp->fat_used += 1; // !!!!
+    }
+
+    size_t offset = filedes[fd]->offset;
+    size_t real_count = count;
+    int32_t leftover_count = real_count;
+    uint16_t write_blk;
+    size_t expand = 0;
+    uint16_t new_blk[8192];
+
+    if(offset == w_dir_entry->file_sz){
+        int32_t temp = get_free_blk_idx();
+
+        if(temp < 0) {
+            w_dir_entry->unused[0] = 'n';
+            return -1; // no block available
+        }
+
+        write_blk = (uint16_t) temp;
+        new_blk[expand++] = write_blk;
+    }
+    else {
+        write_blk = get_offset_blk(int fd, size_t offset);
+    }
+
+    void * bounce_buffer = calloc(BLOCK_SIZE, 1);
+    int buf_idx = 0;
+    if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
+        free(bounce_buffer);
+        w_dir_entry->unused[0] = 'n';
+        return -1;
+    }
+
+    buf_idx = clamp(BLOCK_SIZE - w_dir_entry->file_sz % BLOCK_SIZE, leftover_count);
+    memcpy(bounce_buffer + w_dir_entry->file_sz % BLOCK_SIZE, buf, buf_idx);
+    leftover_count -= buf_idx;
+    if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
+        w_dir_entry->unused[0] = 'n';
+        free(bounce_buffer);
+        return -1;
+    } // write the first blk
+    
+    while(leftover_count > 0){
+        // get the next written block
+        if(expand > 0){
+            write_blk = (uint16_t) temp;
+            new_blk[expand++] = write_blk;
+        }
+        else{ // 不用找新的，但是可能解下来需要找新的
+            write_blk = *(get_fat(write_blk));
+            if(write_blk == 0xFFFF){
+                int32_t temp = get_free_blk_idx();
+                if(temp < 0) 
+                    break; // no more block
+                write_blk = (uint16_t) temp;
+                new_blk[expand++] = write_blk;
+            }
+        }
+        //write
+        if(leftover_count >= BLOCK_SIZE){
+            if(block_write(sp->data_blk + write_blk, buf + buf_idx) < 0){
+                w_dir_entry->unused[0] = 'n';
+                free(bounce_buffer);
+                return -1;
+            }
+            buf_idx += BLOCK_SIZE;
+
+        }
+        else{
+            if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
+                free(bounce_buffer);
+                w_dir_entry->unused[0] = 'n';
+                return -1;
+            }
+            memcpy(bounce_buffer, buf + buf_idx, leftover_count);
+            if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
+                free(bounce_buffer);
+                w_dir_entry->unused[0] = 'n';
+                return -1;
+            }
+        }
+        leftover_count -= BLOCK_SIZE;
+    }
+    
+    //update the metadata
+    if(leftover_count > 0) {
+        real_count -= leftover_count;
+    }
+    w_dir_entry->file_sz += real_count; 
+
+    fat16 = get_fat(w_dir_entry->last_data_blk);
+    size_t i = 0;
+    while(expand > 0){
+        *fat16 = new_blk[i]
+        fat16 = get_fat(new_blk[i]);
+
+        i += 1;
+        expand -= 1;
+    }
+    *fat16 = 0xFFFF;
+    write_meta();
+
+    w_dir_entry->unused[0] = 'n';
+    if(bounce_buffer) free(bounce_buffer);
+    
+    return real_count;
+}
+
+
+/* fs_write version 1.0, without offset, work
+
+int fs_write(int fd, void *buf, size_t count)
+{
     if(!is_valid_fd(fd)) return -1;
     if(sp->data_blk_count == sp->fat_used ) return 0; // not error -1; return "written" count 0;
 
@@ -1106,6 +1235,7 @@ int fs_write(int fd, void *buf, size_t count)
     return real_count;
 }
 
+*/
 /**
  * fs_read - Read from a file
  * @fd: File descriptor
@@ -1143,7 +1273,7 @@ int fs_read(int fd, void *buf, size_t count)
         return 0;
 
     uint16_t read_blk = get_offset_blk(fd, offset);
-    if(read_blk == 0) return -1;
+    if(read_blk == 0) return -1; // nothing can be read
 
     //read first block
     int32_t real_count_temp = real_count;
