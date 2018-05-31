@@ -1110,10 +1110,15 @@ int fs_write(int fd, void *buf, size_t count)
     if(leftover_count > 0) {
         real_count -= leftover_count;
     }
-    w_dir_entry->file_sz += real_count; 
+    if(real_count + offset > w_dir_entry->file_sz)
+        w_dir_entry->file_sz = real_count + offset; 
+    // else if(w_dir_entry->file_sz == 0){
+    //     w_dir_entry->file_sz = real_count;
+    // }
 
     fat16 = get_fat(w_dir_entry->last_data_blk);
     size_t i = 0;
+    sp->fat_used += expand;
     while(expand > 0){
         *fat16 = new_blk[i];
         fat16 = get_fat(new_blk[i]);
