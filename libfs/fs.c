@@ -301,7 +301,8 @@ void sp_setup(){
             // if(tmp * BLOCK_SIZE < dir_entry->file_sz)
             //     tmp += 1;
             int tmp = file_blk_count(dir_entry->file_sz);
-            sp->fat_used += tmp;
+            if(dir_entry->first_data_blk != FAT_EOC)
+                sp->fat_used += tmp;
         }
     }
 }
