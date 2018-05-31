@@ -1108,6 +1108,8 @@ int fs_write(int fd, void *buf, size_t count)
         }
         leftover_count -= BLOCK_SIZE;
     }
+
+    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     
     //update the metadata
     if(leftover_count > 0) {
@@ -1118,7 +1120,7 @@ int fs_write(int fd, void *buf, size_t count)
     // else if(w_dir_entry->file_sz == 0){
     //     w_dir_entry->file_sz = real_count;
     // }
-
+    printf("2222222!!!!!!!!!!!!!!!!!!!!!!!\n");
     fat16 = get_fat(w_dir_entry->last_data_blk);
     size_t i = 0;
     sp->fat_used += expand;
@@ -1132,7 +1134,7 @@ int fs_write(int fd, void *buf, size_t count)
     }
     *fat16 = 0xFFFF;
 
-
+    printf("3333333!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     write_meta();
     w_dir_entry->unused[0] = 'n';
     if(bounce_buffer) free(bounce_buffer);
