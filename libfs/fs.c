@@ -1007,7 +1007,7 @@ int fs_write(int fd, void *buf, size_t count)
     size_t expand = 0;
     uint16_t new_blk[8192];
 
-    if(offset == w_dir_entry->file_sz){
+    if(w_dir_entry->file_sz != 0 && offset == w_dir_entry->file_sz){
         int32_t temp = get_free_blk_idx();
 
         if(temp < 0) {
