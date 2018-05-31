@@ -306,7 +306,35 @@ void sp_setup(){
     }
 }
 
-
+/* write back meta-information
+ helper-II for @fs_umount and etc. 
+ * also update the meta-information when write, delete a file
+*/
+int write_meta(){
+    if(sp == NULL || root_dir == NULL || fat == NULL){
+        eprintf("no virtual disk mounted to write_meta");
+        return -1;
+    }
+    if(block_write(0, (void *)sp) < 0)
+    {
+        eprintf("fs_umount write back sp error\n");
+        return -1; 
+    }
+    if(block_write(sp->rdir_blk, root_dir) < 0)// write back
+    {
+        eprintf("fs_umount write back dir error\n");
+        return -1; 
+    }
+    for (int i = 0; i < sp->fat_blk_count; ++i)
+    {
+        if(block_write(1 + i, fat + BLOCK_SIZE * i) < 0)// write back
+        {
+            eprintf("fs_umount write back fat blk %d error\n", i);
+            return -1; 
+        }
+    }
+    return 0;
+}
 /*
  * free space to sp, root_dir, and fat; set to zero for all of them
  * fail return -1; succeed return 0;
@@ -516,35 +544,7 @@ int fs_mount(const char *diskname)
 
  
 
-/* write back meta-information
- helper-II for @fs_umount and etc. 
- * also update the meta-information when write, delete a file
-*/
-int write_meta(){
-    if(sp == NULL || root_dir == NULL || fat == NULL){
-        eprintf("no virtual disk mounted to write_meta");
-        return -1;
-    }
-    if(block_write(0, (void *)sp) < 0)
-    {
-        eprintf("fs_umount write back sp error\n");
-        return -1; 
-    }
-    if(block_write(sp->rdir_blk, root_dir) < 0)// write back
-    {
-        eprintf("fs_umount write back dir error\n");
-        return -1; 
-    }
-    for (int i = 0; i < sp->fat_blk_count; ++i)
-    {
-        if(block_write(1 + i, fat + BLOCK_SIZE * i) < 0)// write back
-        {
-            eprintf("fs_umount write back fat blk %d error\n", i);
-            return -1; 
-        }
-    }
-    return 0;
-}
+
 /**
  * fs_umount - Unmount file system
  *
