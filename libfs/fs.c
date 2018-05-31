@@ -461,6 +461,8 @@ int fs_mount(const char *diskname)
     disk = malloc(strlen(diskname) + 1);
     strcpy(disk, diskname);
 
+    write_meta(); // for data used
+
     return 0;
 }
 /**/
