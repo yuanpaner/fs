@@ -312,6 +312,9 @@ void sp_setup(){
  * also update the meta-information when write, delete a file
 */
 int write_meta(){
+
+    if(sp->fat_used >= sp->block_disk_count)
+        sp->fat_used = sp->block_disk_count;
     if(sp == NULL || root_dir == NULL || fat == NULL){
         eprintf("no virtual disk mounted to write_meta");
         return -1;
