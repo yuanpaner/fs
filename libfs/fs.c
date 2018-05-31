@@ -937,6 +937,7 @@ uint16_t get_offset_blk(int fd, size_t offset){
     }
 
     dir_entry = filedes[fd]->file_entry;
+    if(offset == 0) return dir_entry->first_data_blk;
     if(offset >= dir_entry->file_sz){
         // eprintf("get_offset_blk fail: offset is larger than file size\n");
         return 0;
