@@ -937,7 +937,7 @@ uint16_t get_offset_blk(int fd, size_t offset){
     }
 
     dir_entry = filedes[fd]->file_entry;
-    if(offset == 0) return dir_entry->first_data_blk;
+    // if(offset == 0) return dir_entry->first_data_blk;
     if(offset >= dir_entry->file_sz){
         // eprintf("get_offset_blk fail: offset is larger than file size\n");
         return 0;
@@ -988,6 +988,18 @@ int fs_write(int fd, void *buf, size_t count)
         eprintf("other writing continues, unable to write\n");
         return -1;
     }
+    if(count == 0) return 0;
+
+    size_t offset = filedes[fd]->offset;
+    size_t real_count = count;
+    int32_t leftover_count = real_count;
+    uint16_t write_blk;
+    size_t expand = 0;
+    uint16_t new_blk[8192];
+
+    if(offset > w_dir_entry->file_sz)
+        return -1;
+
     w_dir_entry->unused[0] = 'w';
 
     if( w_dir_entry->first_data_blk == FAT_EOC){ // empty file, no blk assign
@@ -1001,14 +1013,17 @@ int fs_write(int fd, void *buf, size_t count)
         sp->fat_used += 1; // !!!!
     }
 
-    size_t offset = filedes[fd]->offset;
-    size_t real_count = count;
-    int32_t leftover_count = real_count;
-    uint16_t write_blk;
-    size_t expand = 0;
-    uint16_t new_blk[8192];
+    // size_t offset = filedes[fd]->offset;
+    // size_t real_count = count;
+    // int32_t leftover_count = real_count;
+    // uint16_t write_blk;
+    // size_t expand = 0;
+    // uint16_t new_blk[8192];
 
-    if(w_dir_entry->file_sz != 0 && offset == w_dir_entry->file_sz){
+    if(offset == 0){
+        write_blk = w_dir_entry->first_data_blk;
+    }
+    else if(offset == w_dir_entry->file_sz){
         int32_t temp = get_free_blk_idx();
 
         if(temp < 0) {
