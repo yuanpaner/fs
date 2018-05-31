@@ -195,7 +195,7 @@ int file_blk_count(uint32_t sz){
  * check the duplicated existed filename by @filename
  * return index number; -1 if fail. set the entry_ptr address 
  */
-int get_valid_directory_entry(const char * filename, void * entry_ptr){
+int get_valid_directory_entry(const char * filename, void * & entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
@@ -221,7 +221,7 @@ int get_valid_directory_entry(const char * filename, void * entry_ptr){
 }
 
 /* get the dir entry id by filename*/
-int get_directory_entry(const char * filename, void * entry_ptr){
+int get_directory_entry(const char * filename, void * & entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
