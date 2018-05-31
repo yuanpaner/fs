@@ -251,17 +251,25 @@ int erase_fat(uint16_t * id){ // recursion to erase
     if(sp == NULL || root_dir == NULL || id == NULL)
         return -1;
 
-    if(*id == 0xFFFF){
-        *id = 0;
-        sp->fat_used -= 1; // careful
-        return 0;
-    }
+    // if(*id == 0xFFFF){
+    //     *id = 0;
+    //     sp->fat_used -= 1; // careful
+    //     return 0;
+    // }
 
-    uint16_t * next = fat + sizeof(uint16_t) * (*id);
-    erase_fat(next);
-    
+    while((*id) != 0xFFFF){
+        uint16_t next = *id;
+        *id = 0;
+        sp->fat_used -= 1;
+        id = get_fat(next);
+    }
     *id = 0;
     sp->fat_used -= 1;
+    // uint16_t * next = fat + sizeof(uint16_t) * (*id);
+    // erase_fat(next);
+    
+    // *id = 0;
+    // sp->fat_used -= 1;
 
     return 0;
 }
