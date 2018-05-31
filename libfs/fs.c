@@ -195,7 +195,7 @@ int file_blk_count(uint32_t sz){
  * check the duplicated existed filename by @filename
  * return index number; -1 if fail. set the entry_ptr address 
  */
-int get_valid_directory_entry(const char * filename, void * & entry_ptr){
+int get_valid_directory_entry(const char * filename, void *  entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
@@ -221,7 +221,7 @@ int get_valid_directory_entry(const char * filename, void * & entry_ptr){
 }
 
 /* get the dir entry id by filename*/
-int get_directory_entry(const char * filename, void * & entry_ptr){
+int get_directory_entry(const char * filename, void *  entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
@@ -745,8 +745,9 @@ int fs_delete(const char *filename)
 {
     /* TODO: Phase 2 */
     struct RootDirEntry * cur_entry = NULL;
-    int entry_id = get_directory_entry(filename, (void *)cur_entry);
+    int entry_id = get_directory_entry(filename, NULL);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
+    cur_entry = get_dir(entry_id);
     // or if file @filename is currently open. 0 otherwise.
 
     // cur_entry = root_dir + sizeof(struct RootDirEntry) * entry_id;
