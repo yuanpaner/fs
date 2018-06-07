@@ -361,13 +361,14 @@ void sp_setup(){
 }
 
 /* write back meta-information
- helper-II for @fs_umount and etc. 
+ * helper-II for @fs_umount and etc. 
  * also update the meta-information when write, delete a file
 */
 int write_meta(){
-
+    /* should not happen
     if(sp->fat_used >= sp->data_blk_count)
         sp->fat_used = sp->data_blk_count;
+    */ 
     if(sp == NULL || root_dir == NULL || fat == NULL){
         eprintf("no virtual disk mounted to write_meta");
         return -1;
@@ -421,9 +422,10 @@ void clear(){
     {
         if(filedes[i] != NULL) // should n't happen actually
         {
+            fs_close(i); 
             free(filedes[i]);
             filedes[i] = NULL;
-            eprintf("alert file descriptor %d is not clear\n",i);
+            eprintf("alert file descriptor %d is not clear, force to be closed\n",i);
         }
     }
 
@@ -491,6 +493,7 @@ int fs_mount(const char *diskname)
     
     // if(init_alloc() < 0) return -1; // allocate error
 
+    /* super block read */
     sp = malloc(BLOCK_SIZE); 
     if(sp == NULL) { clear(); return -1; }
 
@@ -514,6 +517,7 @@ int fs_mount(const char *diskname)
         return -1;
     }
 
+    /* root_dir read; fat block read */
     root_dir = malloc(BLOCK_SIZE);
     if(root_dir == NULL) { clear(); return -1; }
     memset(root_dir, 0, BLOCK_SIZE);
@@ -523,8 +527,9 @@ int fs_mount(const char *diskname)
         return -1; 
     }
 
-    dir_entry = get_dir(0);
-    sp_setup();
+    // dir_entry = get_dir(0);
+    dir_entry = (struct RootDirEntry *)root_dir;
+    
 
     fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
     if(fat == NULL) { clear(); return -1; }
@@ -537,7 +542,9 @@ int fs_mount(const char *diskname)
             return -1;
         }
     }
-    fat16 = get_fat(0);
+    // fat16 = get_fat(0);
+    fat16 = (uint16_t *)fat;
+
 
     for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
         filedes[i] = NULL;
@@ -546,6 +553,7 @@ int fs_mount(const char *diskname)
     disk = malloc(strlen(diskname) + 1);
     strcpy(disk, diskname);
 
+    sp_setup(); // for fat_used and rdir_used
     write_meta(); // for data used
 
     return 0;
@@ -726,8 +734,8 @@ int fs_info(void)
 
 
  This function creates a new file with name in the root directory of your file system. The file is initially empty. The maximum length for a file name is 15 characters. Also, there can be at most 64 files in the directory. Upon successful completion, a value of 0 is returned. fs_create returns -1 on failure. It is a failure when the file with name already exists, when the file name is too long (it exceeds 15 characters), or when there are already 64 files present in the root directory. Note that to access a file that is created, it has to be subsequently opened.
-
  */
+ 
 int fs_create(const char *filename)
 {
     /* TODO: Phase 2 */
