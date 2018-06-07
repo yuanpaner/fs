@@ -703,6 +703,11 @@ int fs_info(void)
     oprintf("fat_free_ratio=%d/%d\n", (sp->data_blk_count - sp->fat_used), sp->data_blk_count);
     oprintf("rdir_free_ratio=%d/%d\n", (FS_FILE_MAX_COUNT - sp->rdir_used),FS_FILE_MAX_COUNT);
 
+    fat16 = fat;
+    for (int i = 0; i < sp->data_blk_count; ++i, ++fat16)
+    {
+        oprintf("fat[%d]:%d\t", i, *fat16)
+    }
 
     /* my info for debug
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
