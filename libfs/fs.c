@@ -220,7 +220,32 @@ int get_valid_directory_entry(const char * filename, void *  entry_ptr){
     return i;
 }
 
-/* get the dir entry id by filename*/
+/* get the dir entry id by filename; pass the entry pointer to @entry_ptr
+*/
+int get_directory_entry(const char * filename, void *  entry_ptr){
+    if(filename == NULL || root_dir == NULL || sp == NULL)
+        return -1;
+    int i;
+
+    struct RootDirEntry * tmp = root_dir;
+    for (i = 0; i < FS_FILE_MAX_COUNT; ++i, ++tmp)
+    {
+        // struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry); 
+
+        if(strcmp(tmp->filename, filename) == 0){
+            if(entry_ptr)
+                *((struct RootDirEntry *)entry_ptr) = *tmp;
+            return i;
+        }
+    }
+    if(i == FS_FILE_MAX_COUNT){
+        eprintf("get_directory_entry: not found\n");
+        return -1;
+    }
+
+    return -1;
+}
+/* version 1.0
 int get_directory_entry(const char * filename, void *  entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
@@ -243,7 +268,7 @@ int get_directory_entry(const char * filename, void *  entry_ptr){
 
     return -1;
 }
-
+*/
 /* resume the fat as zero ( free ) again
  * update the sp->fat_used
 */
