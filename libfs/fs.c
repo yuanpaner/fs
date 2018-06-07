@@ -269,6 +269,8 @@ int get_directory_entry(const char * filename, void *  entry_ptr){
     return -1;
 }
 */
+
+
 /* resume the fat as zero ( free ) again
  * update the sp->fat_used
 */
@@ -308,13 +310,38 @@ uint16_t id_to_real_blk(int i){
 
 
 /**************** helper-II for @fs_mount, @fs_umount and etc. *************/
-
+/*
+ * read root directory block to update @sp->fat_used and @sp->rdir_used
+*/
 void sp_setup(){
     if(sp == NULL || root_dir == NULL)
         return ;
     // if(sp->fat_used > 1 && sp->rdir_used > 0) // write correctly already
     //     return ; // no need to set, has already been written
 
+    dir_entry = root_dir;
+    fat16 = fat;
+
+    sp->fat_used = 1;
+    sp->rdir_used = 0;
+    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
+    {
+        if(dir_entry->filename[0] != 0){
+            sp->rdir_used += 1;
+
+            // int tmp = file_blk_count(dir_entry->file_sz);
+            // if(dir_entry->first_data_blk != FAT_EOC) // for empty file
+            //     sp->fat_used += tmp;
+        }
+    }
+
+    ++fat16;
+    for (int i = 0; i < sp->data_blk_count; ++i, ++fat16)
+    {
+        if(*fat16 != FAT_EOC)
+            ++(sp->fat_used);
+    }
+    /* version 1.0  relies on the accuracy of filesize
     dir_entry = root_dir;
     sp->fat_used = 1;
     sp->rdir_used = 0;
@@ -326,10 +353,11 @@ void sp_setup(){
             // if(tmp * BLOCK_SIZE < dir_entry->file_sz)
             //     tmp += 1;
             int tmp = file_blk_count(dir_entry->file_sz);
-            if(dir_entry->first_data_blk != FAT_EOC)
+            if(dir_entry->first_data_blk != FAT_EOC) // for empty file
                 sp->fat_used += tmp;
         }
     }
+    */
 }
 
 /* write back meta-information
