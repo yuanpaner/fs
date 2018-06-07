@@ -735,7 +735,7 @@ int fs_info(void)
 
  This function creates a new file with name in the root directory of your file system. The file is initially empty. The maximum length for a file name is 15 characters. Also, there can be at most 64 files in the directory. Upon successful completion, a value of 0 is returned. fs_create returns -1 on failure. It is a failure when the file with name already exists, when the file name is too long (it exceeds 15 characters), or when there are already 64 files present in the root directory. Note that to access a file that is created, it has to be subsequently opened.
  */
- 
+
 int fs_create(const char *filename)
 {
     /* TODO: Phase 2 */
@@ -776,7 +776,7 @@ int fs_create(const char *filename)
     strcpy(dir_entry->filename, filename);
     dir_entry->file_sz = 0;
     dir_entry->open = 0;
-    dir_entry->first_data_blk = FAT_EOC; // entry, should assign block here, in case the file size is 0;
+    dir_entry->first_data_blk = FAT_EOC; 
     dir_entry->last_data_blk = FAT_EOC;
     memset(dir_entry->unused, 0, 7);
     // dir_entry->first_data_blk = get_free_blk_idx(); // entry, should assign block here, in case the file size is 0;
@@ -791,6 +791,7 @@ int fs_create(const char *filename)
     // sp->fat_used += 1;
     sp->rdir_used += 1; // how to deal with @setup_sp
 
+    write_meta(); 
     return 0;
 }
 
@@ -845,6 +846,17 @@ int fs_delete(const char *filename)
  *
  * Return: -1 if no underlying virtual disk was opened. 0 otherwise.
  */
+void print_file(struct RootDirEntry * fentry){
+    oprintf("file: %s, size: %d, data_blk: %d\n", fentry->filename, fentry->file_sz, fentry->first_data_blk);
+    // for debug, print fat
+    if(fentry->first_data_blk != FAT_EOC){
+        uint16_t *tmp = get_fat(fentry->first_data_blk);
+        oprintf("first fat id = %d\n", fentry->first_data_blk);
+        while(*tmp != FAT_EOC)
+            oprintf("-> %d\t", *tmp);
+        oprintf(" END\n");
+    }
+}
 int fs_ls(void)
 {
     /* TODO: Phase 2 */
@@ -855,12 +867,14 @@ int fs_ls(void)
 
     oprintf("FS Ls:\n");
 
-    dir_entry = get_dir(0);
-    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
+    // dir_entry = get_dir(0);
+    dir_entry = (struct RootDirEntry *)root_dir;
+    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, ++dir_entry)
     {
         // dir_entry = get_dir(i);
         if((dir_entry->filename)[0] != 0){
-            oprintf("file: %s, size: %d, data_blk: %d\n", dir_entry->filename, dir_entry->file_sz, dir_entry->first_data_blk);
+            print_file((struct RootDirEntry *)dir_entry);
+            // oprintf("file: %s, size: %d, data_blk: %d\n", dir_entry->filename, dir_entry->file_sz, dir_entry->first_data_blk);
         }
     }
 
