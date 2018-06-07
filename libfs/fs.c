@@ -1396,6 +1396,7 @@ int fs_read(int fd, void *buf, size_t count)
         return 0;
 
     uint16_t read_blk = get_offset_blk(fd, offset);
+
     if(read_blk == 0) return -1; // nothing can be read
 
     //read first block
@@ -1408,7 +1409,7 @@ int fs_read(int fd, void *buf, size_t count)
         free(bounce_buffer);
         return -1;
     }
-    memcpy(buf + buf_idx, bounce_buffer, clamp(real_count_temp, BLOCK_SIZE));
+    memcpy(buf + buf_idx, bounce_buffer + offset % BLOCK_SIZE, clamp(real_count_temp, BLOCK_SIZE));
 
     buf_idx += clamp(real_count_temp, BLOCK_SIZE);
     real_count_temp -= BLOCK_SIZE; // remaining
