@@ -324,7 +324,6 @@ void thread_fs_read(void *arg)
 		die("Offset out of boundary");
 	}
 
-	printf("~~~~\n");
 	read = fs_read(fs_fd, buf, stat-offset);
 
 	if (fs_close(fs_fd)) {

@@ -1387,6 +1387,7 @@ int fs_write(int fd, void *buf, size_t count)
 int fs_read(int fd, void *buf, size_t count)
 {
     /* TODO: Phase 4 */
+    printf("enter fs_read~~~~~~~\n");
     if(!is_valid_fd(fd)) return -1;
     dir_entry = filedes[fd]->file_entry;
 
@@ -1409,7 +1410,7 @@ int fs_read(int fd, void *buf, size_t count)
         free(bounce_buffer);
         return -1;
     }
-    printf("!!!!offset in fs_read = %d\n", (int)offset);
+    printf("~~~~offset in fs_read = %d\n", (int)offset);
     memcpy(buf + buf_idx, bounce_buffer + offset % BLOCK_SIZE, clamp(real_count_temp, BLOCK_SIZE));
 
     buf_idx += clamp(real_count_temp, BLOCK_SIZE);
