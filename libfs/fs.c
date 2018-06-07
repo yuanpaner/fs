@@ -952,6 +952,7 @@ int fs_close(int fd)
     if(!is_valid_fd(fd)) return -1;
 
     dir_entry = filedes[fd]->file_entry;
+    
     dir_entry->open -= 1;
     dir_entry->unused[0] = 'x';
 

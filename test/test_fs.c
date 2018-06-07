@@ -276,6 +276,73 @@ size_t get_argv(char *argv)
 	return (size_t)ret;
 }
 
+//mine
+void thread_fs_read(void *arg)
+{
+	struct thread_arg *t_arg = arg;
+	char *diskname, *filename, *buf;
+	int fs_fd;
+	int stat, read;
+	int offset;
+
+	if (t_arg->argc < 3)
+		die("need <diskname> <filename> <offset>");
+
+	diskname = t_arg->argv[0];
+	filename = t_arg->argv[1];
+	offset = atoi(t_arg->argv[2]);
+
+	if (fs_mount(diskname))
+		die("Cannot mount diskname");
+
+	fs_fd = fs_open(filename);
+	if (fs_fd < 0) {
+		fs_umount();
+		die("Cannot open file");
+	}
+
+	stat = fs_stat(fs_fd);
+	if (stat < 0) {
+		fs_umount();
+		die("Cannot stat file");
+	}
+	if (!stat) {
+		/* Nothing to read, file is empty */
+		printf("Empty file\n");
+		return;
+	}
+	buf = malloc(stat-offset);
+	if (!buf) {
+		perror("malloc");
+		fs_umount();
+		die("Cannot malloc");
+	}
+
+	if(fs_lseek(int fd, size_t offset) < 0){
+		fs_close(fs_fd);
+		fs_umount();
+		die("Offset out of boundary");
+	}
+
+	read = fs_read(fs_fd, buf, stat-offset);
+
+	if (fs_close(fs_fd)) {
+		fs_umount();
+		die("Cannot close file");
+	}
+
+	if (fs_umount())
+		die("cannot unmount diskname");
+
+	printf("Read file '%s' (%d/%d bytes)\n", filename, read, stat);
+	printf("Content of the file:\n");
+	printf("%.*s", (int)stat, buf);
+
+	free(buf);
+}
+
+
+
 static struct {
 	const char *name;
 	void(*func)(void *);
@@ -286,6 +353,7 @@ static struct {
 	{ "rm",		thread_fs_rm },
 	{ "cat",	thread_fs_cat },
 	{ "stat",	thread_fs_stat },
+	{ "read",	thread_fs_read },
 };
 
 void usage(char *program)
