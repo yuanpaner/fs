@@ -338,7 +338,7 @@ void sp_setup(){
     ++fat16;
     for (int i = 0; i < sp->data_blk_count; ++i, ++fat16)
     {
-        if(*fat16 != FAT_EOC)
+        if(*fat16 != 0)
             ++(sp->fat_used);
     }
     /* version 1.0  relies on the accuracy of filesize
