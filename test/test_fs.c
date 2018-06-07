@@ -318,7 +318,7 @@ void thread_fs_read(void *arg)
 		die("Cannot malloc");
 	}
 
-	if(fs_lseek(int fd, size_t offset) < 0){
+	if(fs_lseek(fs_fd, offset) < 0){
 		fs_close(fs_fd);
 		fs_umount();
 		die("Offset out of boundary");
