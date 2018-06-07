@@ -311,9 +311,12 @@ void thread_fs_read(void *arg)
 		printf("Empty file\n");
 		return;
 	}
+
+
 	buf = malloc(stat-offset);
 	if (!buf) {
 		perror("malloc");
+		fs_close(fs_fd);
 		fs_umount();
 		die("Cannot malloc");
 	}
