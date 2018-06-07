@@ -334,9 +334,9 @@ void thread_fs_read(void *arg)
 	if (fs_umount())
 		die("cannot unmount diskname");
 
-	printf("Read file '%s' (%d/%d bytes)\n", filename, read, stat);
+	printf("Read file '%s' (%d/%d bytes) with offset '%d'\n", filename, read, stat, offset);
 	printf("Content of the file:\n");
-	printf("%.*s", (int)stat, buf);
+	printf("%.*s", (int)(stat-offset), buf);
 
 	free(buf);
 }
