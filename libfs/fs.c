@@ -706,7 +706,7 @@ int fs_info(void)
     fat16 = fat;
     for (int i = 0; i < sp->data_blk_count; ++i, ++fat16)
     {
-        oprintf("fat[%d]:%d\t", i, *fat16)
+        oprintf("fat[%d]:%d\t", i, *fat16);
     }
 
     /* my info for debug
