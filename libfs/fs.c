@@ -850,6 +850,8 @@ void print_file(struct RootDirEntry * fentry, bool debug){
     oprintf("file: %s, size: %d, data_blk: %d\n", fentry->filename, fentry->file_sz, fentry->first_data_blk);
     // for debug, print fat
     if(fentry->first_data_blk != FAT_EOC && debug){
+        oprintf("open: %d\n", fentry->open);
+        
         uint16_t *tmp = get_fat(fentry->first_data_blk);
         oprintf("first fat id = %d\n", fentry->first_data_blk);
         while(*tmp != FAT_EOC)
@@ -873,7 +875,7 @@ int fs_ls(void)
     {
         // dir_entry = get_dir(i);
         if((dir_entry->filename)[0] != 0){
-            print_file((struct RootDirEntry *)dir_entry, 0);
+            print_file((struct RootDirEntry *)dir_entry, 1);
             // oprintf("file: %s, size: %d, data_blk: %d\n", dir_entry->filename, dir_entry->file_sz, dir_entry->first_data_blk);
         }
     }
