@@ -1410,7 +1410,7 @@ int fs_read(int fd, void *buf, size_t count)
         free(bounce_buffer);
         return -1;
     }
-    printf("~~~~offset in fs_read = %d\n", (int)offset);
+    oprintf("~~~~offset in fs_read = %d\n", (int)offset);
     memcpy(buf + buf_idx, bounce_buffer + offset % BLOCK_SIZE, clamp(real_count_temp, BLOCK_SIZE));
 
     buf_idx += clamp(real_count_temp, BLOCK_SIZE);

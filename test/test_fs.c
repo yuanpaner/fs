@@ -336,7 +336,7 @@ void thread_fs_read(void *arg)
 
 	printf("Read file '%s' (%d/%d bytes) with offset '%d'\n", filename, read, stat, offset);
 	printf("Content of the file:\n");
-	printf("%.*s", (int)(stat-offset), buf);
+	printf("%.*s\n", (int)(stat-offset), buf);
 
 	free(buf);
 }
