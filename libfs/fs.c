@@ -1230,11 +1230,12 @@ int fs_write(int fd, void *buf, size_t count)
             else {
                 memset(bounce_buffer, 0, BLOCK_SIZE);
                 memcpy(bounce_buffer, buf + buf_idx, leftover_count);
-                if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
+                if(block_write(write_blk + sp->data_blk, bounce_buffer) < 0 ){
                     free(bounce_buffer);
                     w_dir_entry->unused[0] = 'n';
                     break;
                 }
+                
                 leftover_count = 0;
             }
 
