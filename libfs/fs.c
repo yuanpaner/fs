@@ -1520,7 +1520,8 @@ int fs_read(int fd, void *buf, size_t count)
     memcpy(buf + buf_idx, bounce_buffer + offset % BLOCK_SIZE, clamp(leftover_count, BLOCK_SIZE - offset % BLOCK_SIZE));
 
     buf_idx += clamp(leftover_count, BLOCK_SIZE - offset % BLOCK_SIZE);
-    leftover_count -= BLOCK_SIZE; // remaining
+    // leftover_count -= BLOCK_SIZE; // error
+    leftover_count -= buf_idx; // remaining
     if(leftover_count < 0) leftover_count = 0;
     read_blk = *(get_fat(read_blk));
 
