@@ -312,7 +312,7 @@ void thread_fs_read(void *arg)
 		return;
 	}
 
-	printf("offset = %d, stat = %d\n", offset, stat);
+	// printf("offset = %d, stat = %d\n", offset, stat);
 	buf = malloc(stat-offset);
 	if (!buf) {
 		perror("malloc");
