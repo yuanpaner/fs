@@ -1107,8 +1107,8 @@ int fs_write(int fd, void *buf, size_t count)
     size_t real_count = count;
     int32_t leftover_count = real_count;
     uint16_t write_blk;
-    size_t expand = 0;
-    uint16_t new_blk[8192];
+    // size_t expand = 0;
+    // uint16_t new_blk[8192];
 
     /* get the first block written to */
     if(offset == 0){
