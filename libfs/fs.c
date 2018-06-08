@@ -29,7 +29,7 @@
 #define pickmax(x, y) (((x) > (y)) ? (x) : (y))
 #define FAT_EOC 0xFFFF
 const static char FS_NAME[8] = "ECS150FS";
-
+const int db = 1; // 1: debug, 0: no
 
 /******************* Data Structure *********************/
 /* Metadata format
@@ -143,6 +143,25 @@ struct RootDirEntry * get_dir(int id){
     return (struct RootDirEntry *)(root_dir + id * sizeof(struct RootDirEntry));
 }
 
+
+void print_data(){
+    fat16 = fat;
+    ++fat16;
+    char * buf = malloc(BLOCK_SIZE);
+    for (int i = 1; i < sp->data_blk_count; ++i, ++fat16)
+    {
+        if(*fat16 != 0){
+            if(block_read(sp->data_blk + i, (void *)buf) < 0) { 
+                free(buf);
+                eprintf("block_read fail\n");
+                return ;
+            }
+            printf("block[%d]\n", i);
+            printf("%.*s\n", BLOCK_SIZE, buf);
+
+        }
+    }
+}
 /* block index -> fat entry address
  * get file directory entry pointer according to block id 
 */
@@ -710,6 +729,9 @@ int fs_info(void)
         oprintf("fat[%d]:%d\n", i, *fat16);
     }
 
+    if(db)
+        print_data();
+
     /* my info for debug
     eprintf("unused[0]=%d\n", (uint8_t)(sp->unused)[0]); // unused[0]=0
 
@@ -884,7 +906,7 @@ int fs_ls(void)
     {
         // dir_entry = get_dir(i);
         if((dir_entry->filename)[0] != 0){
-            print_file(dir_entry, 1);
+            print_file(dir_entry, db);
             // oprintf("file: %s, size: %d, data_blk: %d\n", dir_entry->filename, dir_entry->file_sz, dir_entry->first_data_blk);
         }
     }
