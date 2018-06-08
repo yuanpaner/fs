@@ -1235,7 +1235,7 @@ int fs_write(int fd, void *buf, size_t count)
                     w_dir_entry->unused[0] = 'n';
                     break;
                 }
-                
+
                 leftover_count = 0;
             }
 
@@ -1489,7 +1489,7 @@ int fs_write(int fd, void *buf, size_t count)
  int block_read(size_t block, void *buf);
  */
 
-
+// offset is 4096 there is problem
 int fs_read(int fd, void *buf, size_t count)
 {
     /* TODO: Phase 4 */
