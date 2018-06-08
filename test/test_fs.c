@@ -397,7 +397,7 @@ void thread_fs_write(void *arg)
 
 	if(opt != NULL && strcmp(opt, "file") == 0){
 		//write form one file to another file
-		fd = open(buf, O_RDONLY);
+		int fd = open(buf, O_RDONLY);
 		if (fd < 0)
 			die_perror("open");
 		if (fstat(fd, &st))
