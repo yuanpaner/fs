@@ -426,7 +426,7 @@ void thread_fs_write(void *arg)
 
 	thread_fs_read(&arg2);
 
-	free(arg.argv);
+	free(arg2.argv);
 
 }
 
