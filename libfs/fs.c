@@ -1138,8 +1138,10 @@ int fs_write(int fd, void *buf, size_t count)
         return 0;
     }
 
-    buf_idx = clamp(BLOCK_SIZE - w_dir_entry->file_sz % BLOCK_SIZE, leftover_count);
-    memcpy(bounce_buffer + w_dir_entry->file_sz % BLOCK_SIZE, buf, buf_idx);
+    // buf_idx = clamp(BLOCK_SIZE - w_dir_entry->file_sz % BLOCK_SIZE, leftover_count);
+    buf_idx = clamp(BLOCK_SIZE - offset % BLOCK_SIZE, leftover_count);
+    // memcpy(bounce_buffer + w_dir_entry->file_sz % BLOCK_SIZE, buf, buf_idx);
+    memcpy(bounce_buffer + offset % BLOCK_SIZE, buf, buf_idx);
     leftover_count -= buf_idx;
     if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
         w_dir_entry->unused[0] = 'n';
