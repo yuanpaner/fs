@@ -17,6 +17,9 @@ read from files or write to files, etc.
 
 ## Semaphore API
 
+## Problems in debugging  
+fs_read() -- cant't read the last block at first   
+fs_write() -- cant't written the last block at first   
 
   
 ## Source
