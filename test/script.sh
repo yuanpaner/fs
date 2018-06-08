@@ -10,4 +10,4 @@ echo "2nd argc: $2"
 echo "3rd argc: $3"
 
 # https://linuxconfig.org/create-a-random-character-text-file-using-linux-shell
-< /dev/urandom tr -dc "X" | head -c4096 > fhello
+< /dev/urandom tr -dc "3" | head -c4096 >> fhello
