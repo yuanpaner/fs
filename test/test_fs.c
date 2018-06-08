@@ -353,6 +353,7 @@ void thread_fs_write(void *arg)
 	int stat, write;
 	int offset, count;
 	char* opt = NULL;
+	struct stat st;
 
 	if (t_arg->argc < 5)
 		die("need <diskname> <filename> <buffer> <offset> <count> <opt>\nyou give %d arguments", t_arg->argc);
@@ -395,7 +396,23 @@ void thread_fs_write(void *arg)
 	}
 
 	if(opt != NULL && strcmp(opt, "file") == 0){
-		;//write form one file to another file
+		//write form one file to another file
+		fd = open(buf, O_RDONLY);
+		if (fd < 0)
+			die_perror("open");
+		if (fstat(fd, &st))
+			die_perror("fstat");
+		if (!S_ISREG(st.st_mode))
+			die("Not a regular file: %s\n", filename);
+
+		/* Map file into buffer */
+		buf = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+		if(count > st.st_size)
+			count = st.st_size;
+		write = fs_write(fs_fd, buf, count);
+
+		munmap(buf, st.st_size);
+		close(fd);
 	}
 	else{ // char*, buffer
 		write = fs_write(fs_fd, buf, count);
