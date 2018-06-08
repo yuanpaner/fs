@@ -1123,7 +1123,7 @@ int fs_write(int fd, void *buf, size_t count)
         }
 
         write_blk = (uint16_t) temp;
-        new_blk[expand++] = write_blk;
+        // new_blk[expand++] = write_blk;
     }
     else {
         write_blk = get_offset_blk(fd, offset);
@@ -1147,6 +1147,11 @@ int fs_write(int fd, void *buf, size_t count)
         return 0;
     } // write the first blk
     fat16 = get_fat(write_blk);
+    if(*fat16 == 0){
+        *fat16 = FAT_EOC;
+        sp->fat_used += 1;
+    }
+        
 
     /* write the left-over data 
      * if it's the last hold data block
