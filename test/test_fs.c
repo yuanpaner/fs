@@ -276,7 +276,7 @@ size_t get_argv(char *argv)
 	return (size_t)ret;
 }
 
-//mine
+//yuan
 void thread_fs_read(void *arg)
 {
 	struct thread_arg *t_arg = arg;
@@ -344,6 +344,89 @@ void thread_fs_read(void *arg)
 	free(buf);
 }
 
+//opt 0: buffer, 1: file, 2: char*
+void thread_fs_write(void *arg)
+{
+	struct thread_arg *t_arg = arg;
+	char *diskname, *filename, *buf;
+	int fs_fd;
+	int stat, write;
+	int offset, count;
+	char* opt = NULL;
+
+	if (t_arg->argc < 5)
+		die("need <diskname> <filename> <buffer> <offset> <count> <opt>");
+
+	diskname = t_arg->argv[0];
+	filename = t_arg->argv[1];
+	buf = t_arg->argv[2];
+	offset = atoi(t_arg->argv[3]);
+	count = atoi(t_arg->argv[4]);
+	if(t_arg->argc > 5)
+		opt = t_arg->argv[5];
+
+
+	if (fs_mount(diskname))
+		die("Cannot mount diskname");
+
+	fs_fd = fs_open(filename);
+	if (fs_fd < 0) {
+		fs_umount();
+		die("Cannot open file");
+	}
+
+	stat = fs_stat(fs_fd);
+	if (stat < 0) {
+		fs_close(fs_fd);
+		fs_umount();
+		die("Cannot stat file");
+	}
+
+	if(offset > stat){
+		fs_close(fs_fd);
+		fs_umount();
+		die("Offset could larger than file size\n");
+	}
+
+	if(fs_lseek(fs_fd, offset) < 0){
+		fs_close(fs_fd);
+		fs_umount();
+		die("Offset out of boundary");
+	}
+
+	if(strcmp(opt, "file") == 0){
+		;//write form one file to another file
+	}
+	else{ // char*, buffer
+		write = fs_write(fs_fd, buf, count);
+	}
+	
+
+	if (fs_close(fs_fd)) {
+		fs_umount();
+		die("Cannot close file");
+	}
+
+	if (fs_umount())
+		die("cannot unmount diskname");
+
+	printf("Write file '%s' (%d/%d bytes) with offset '%d'\n", filename, write, stat, offset);
+	printf("Content of the file:\n");
+	// printf("%.*s\n", (int)(stat-offset), buf);
+	struct thread_arg arg{
+		.argc = 3;
+		.argv = malloc(3*sizeof(char*));
+	};
+	arg[argv][0] = diskname;
+	arg[argv][1] = filename;
+	arg[argv][2] = '0';
+
+	thread_fs_read(arg);
+
+	free(arg.argv);
+
+}
+
 
 
 static struct {
@@ -357,6 +440,7 @@ static struct {
 	{ "cat",	thread_fs_cat },
 	{ "stat",	thread_fs_stat },
 	{ "read",	thread_fs_read },
+	{ "write",	thread_fs_write },
 };
 
 void usage(char *program)

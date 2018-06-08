@@ -7,361 +7,4 @@ Persistence;
 Latency/throughput 
 Power drain (in use/idle) ; 
 Weight/volume )
- 
-Persistence
-access
-Addressability
-Latency/throughput
-Power drain
-Weight/volume
-SRAM 
- 
- 
- 
- 
- 
- 
-DRAM
- 
- 
- 
- 
- 
- 
-Magnetic disk 
- 
- 
- 
- 
- 
- 
-Flash/SSD
- 
- 
- 
- 
- 
- 
-
-Magnetic disks Scheduling 
-FCFS 
-SSTF 
-SCAN C-SCAN 
-C-LOOK 
-R-CSCAN, F-SCAN, N-SCAN 
-//Effects of disk scheduling 
-// better performance 
-RAID 
-Flash storage 
-
-
-
-FS: abstractions for maximizing the usage of non-volatile storage
-> Persistent, named data (files) 
-Metadata(), data
-Naming conventions(case, length, extension)
-OS recognize executable files? a magic number that identifies their format 
-$ xxd /usr/bin/firefox | head -1 
-00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000 .ELF............ 
-scripts  ? #!/bin/sh ; #!/usr/bin/env python 
-> Hierarchical organization (directories, subdirectories)
-directories(simply a file containing a collection of mappings from file names to file numbers ) Each mapping is a directory entry: <name, file number> 
-implement: linear(array), list, tree
-path(absolute root dir, relative pcb)
-Hard link Link from name to metadata location; cycles
-Soft link (aka symbolic link)  Link from name to alternate name; File tree walkers can safely ignore symlinks 
-
-> Access control 
-> Crash and storage error tolerance 
-> Performance 
-A volume is a collection of physical storage resources that form a logical storage device containing a file-system. (disk)
-Each volume holds a fully independent tree, in its own namespace (Drive letter assignment (Windows)
-Disk partition(MBR, GPT)
-Mounting multiple volumes arbitrarily in a single logical hierarchy 
-//File-system software layers 
-// File-system typical API 
-create, link(copy), unlink(remove), open, close, read, write, seek, fsync() ,
-//FS design: size, access, usage…
-//constraints
-//blocks (big, small) – management, fragmentation, performance, access
-//implementation. Data structure. locality heuristics 
-//file allocate
-pros cons used?(fragmentation)
-contiguous, link listed, direction allocation, indexed allocation, 
-//FAT(based on a file table:  Linear map of all data blocks on disk Each file is a linked list of blocks )
-FAT, Directory(composed ), 
-Pros: Simple State required per file: start block only; Widely supported; No external fragmentation; Relatively fast if FAT is cached in RAM 
-
-Cons
-Poor locality; Many seeks if FAT is on disk Poor random access Limited metadata Limited access control; No support for hard links; Limitations on volume and file size; No support for reliability strategies 
-//FFS(ext2/3/4 ) Combination of all the indexed-based (direct, indexed and multilevel indexed allocation )
-mate Type(), size, nos of (hl)to this, times, owner and permission
-Inode - Index structure (12 + 1024 + 1024^2 + 1024^3 blocks )
-Characteristics: tree, high degree, fixed structure simple, Asymmetric support small and large both
-Directory structure (array of 16-byte entries , . .., 4B for inode #, 14B for name(name length, file name)
-// Locality heuristics: block groups ？
-Pros: Efficient storage for both small and large files 
-Locality for both small and large files Locality for metadata and data 
-Cons: Inefficient for tiny files (a 1 byte file requires both an inode and a data block) Inefficient encoding when a file is mostly contiguous on disk Need to reserve 10% of free space to prevent fragmentation 
-
-
-compile steps
-http://www.cs.jhu.edu/~phi/csf/slides/lecture-compiling-c.pdf
-http://csapp.cs.cmu.edu/3e/ics3/link/linker.pdf
-http://csapp.cs.cmu.edu/3e/ics3/intro/compilation.pdf
-
-preprocessor 
-• Resolves constants (#define) • Adds additional source code (#include) • Handles other directives like #ifdef / #endif 
-compiler 
-•   Compilation into assembly code 
-assembler 
-•   Conversion into machine code 
-linker 
-•   Adds start-up code
-•   May combine multiple object files 
-
-Storage 
-Memory issues(Volatile Small Expensive )
-Memory hierarchy(Speed Cost Size )
-(Word vs block access; 
-Addressability; 
-Persistence; 
-Latency/throughput 
-Power drain (in use/idle) ; 
-Weight/volume )
- 
-Persistence
-access
-Addressability
-Latency/throughput
-Power drain
-Weight/volume
-SRAM 
- 
- 
- 
- 
- 
- 
-DRAM
- 
- 
- 
- 
- 
- 
-Magnetic disk 
- 
- 
- 
- 
- 
- 
-Flash/SSD
- 
- 
- 
- 
- 
- 
-
-Magnetic disks Scheduling 
-FCFS 
-SSTF 
-SCAN C-SCAN 
-C-LOOK 
-R-CSCAN, F-SCAN, N-SCAN 
-//Effects of disk scheduling 
-// better performance 
-RAID 
-Flash storage 
-
-
-
-FS: abstractions for maximizing the usage of non-volatile storage
-> Persistent, named data (files) 
-Metadata(), data
-Naming conventions(case, length, extension)
-OS recognize executable files? a magic number that identifies their format 
-$ xxd /usr/bin/firefox | head -1 
-00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000 .ELF............ 
-scripts  ? #!/bin/sh ; #!/usr/bin/env python 
-> Hierarchical organization (directories, subdirectories)
-directories(simply a file containing a collection of mappings from file names to file numbers ) Each mapping is a directory entry: <name, file number> 
-implement: linear(array), list, tree
-path(absolute root dir, relative pcb)
-Hard link Link from name to metadata location; cycles
-Soft link (aka symbolic link)  Link from name to alternate name; File tree walkers can safely ignore symlinks 
-
-> Access control 
-> Crash and storage error tolerance 
-> Performance 
-A volume is a collection of physical storage resources that form a logical storage device containing a file-system. (disk)
-Each volume holds a fully independent tree, in its own namespace (Drive letter assignment (Windows)
-Disk partition(MBR, GPT)
-Mounting multiple volumes arbitrarily in a single logical hierarchy 
-//File-system software layers 
-// File-system typical API 
-create, link(copy), unlink(remove), open, close, read, write, seek, fsync() ,
-//FS design: size, access, usage…
-//constraints
-//blocks (big, small) – management, fragmentation, performance, access
-//implementation. Data structure. locality heuristics 
-//file allocate
-pros cons used?(fragmentation)
-contiguous, link listed, direction allocation, indexed allocation, 
-//FAT(based on a file table:  Linear map of all data blocks on disk Each file is a linked list of blocks )
-FAT, Directory(composed ), 
-Pros: Simple State required per file: start block only; Widely supported; No external fragmentation; Relatively fast if FAT is cached in RAM 
-
-Cons
-Poor locality; Many seeks if FAT is on disk Poor random access Limited metadata Limited access control; No support for hard links; Limitations on volume and file size; No support for reliability strategies 
-//FFS(ext2/3/4 ) Combination of all the indexed-based (direct, indexed and multilevel indexed allocation )
-mate Type(), size, nos of (hl)to this, times, owner and permission
-Inode - Index structure (12 + 1024 + 1024^2 + 1024^3 blocks )
-Characteristics: tree, high degree, fixed structure simple, Asymmetric support small and large both
-Directory structure (array of 16-byte entries , . .., 4B for inode #, 14B for name(name length, file name)
-// Locality heuristics: block groups ？
-Pros: Efficient storage for both small and large files 
-Locality for both small and large files Locality for metadata and data 
-Cons: Inefficient for tiny files (a 1 byte file requires both an inode and a data block) Inefficient encoding when a file is mostly contiguous on disk Need to reserve 10% of free space to prevent fragmentation 
-
-
-compile steps
-http://www.cs.jhu.edu/~phi/csf/slides/lecture-compiling-c.pdf
-http://csapp.cs.cmu.edu/3e/ics3/link/linker.pdf
-http://csapp.cs.cmu.edu/3e/ics3/intro/compilation.pdf
-
-preprocessor 
-• Resolves constants (#define) • Adds additional source code (#include) • Handles other directives like #ifdef / #endif 
-compiler 
-•   Compilation into assembly code 
-assembler 
-•   Conversion into machine code 
-linker 
-•   Adds start-up code
-•   May combine multiple object files 
-
-
-Storage 
-Memory issues(Volatile Small Expensive )
-Memory hierarchy(Speed Cost Size )
-(Word vs block access; 
-Addressability; 
-Persistence; 
-Latency/throughput 
-Power drain (in use/idle) ; 
-Weight/volume )
- 
-Persistence
-access
-Addressability
-Latency/throughput
-Power drain
-Weight/volume
-SRAM 
- 
- 
- 
- 
- 
- 
-DRAM
- 
- 
- 
- 
- 
- 
-Magnetic disk 
- 
- 
- 
- 
- 
- 
-Flash/SSD
- 
- 
- 
- 
- 
- 
-
-Magnetic disks Scheduling 
-FCFS 
-SSTF 
-SCAN C-SCAN 
-C-LOOK 
-R-CSCAN, F-SCAN, N-SCAN 
-//Effects of disk scheduling 
-// better performance 
-RAID 
-Flash storage 
-
-
-
-FS: abstractions for maximizing the usage of non-volatile storage
-> Persistent, named data (files) 
-Metadata(), data
-Naming conventions(case, length, extension)
-OS recognize executable files? a magic number that identifies their format 
-$ xxd /usr/bin/firefox | head -1 
-00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000 .ELF............ 
-scripts  ? #!/bin/sh ; #!/usr/bin/env python 
-> Hierarchical organization (directories, subdirectories)
-directories(simply a file containing a collection of mappings from file names to file numbers ) Each mapping is a directory entry: <name, file number> 
-implement: linear(array), list, tree
-path(absolute root dir, relative pcb)
-Hard link Link from name to metadata location; cycles
-Soft link (aka symbolic link)  Link from name to alternate name; File tree walkers can safely ignore symlinks 
-
-> Access control 
-> Crash and storage error tolerance 
-> Performance 
-A volume is a collection of physical storage resources that form a logical storage device containing a file-system. (disk)
-Each volume holds a fully independent tree, in its own namespace (Drive letter assignment (Windows)
-Disk partition(MBR, GPT)
-Mounting multiple volumes arbitrarily in a single logical hierarchy 
-//File-system software layers 
-// File-system typical API 
-create, link(copy), unlink(remove), open, close, read, write, seek, fsync() ,
-//FS design: size, access, usage…
-//constraints
-//blocks (big, small) – management, fragmentation, performance, access
-//implementation. Data structure. locality heuristics 
-//file allocate
-pros cons used?(fragmentation)
-contiguous, link listed, direction allocation, indexed allocation, 
-//FAT(based on a file table:  Linear map of all data blocks on disk Each file is a linked list of blocks )
-FAT, Directory(composed ), 
-Pros: Simple State required per file: start block only; Widely supported; No external fragmentation; Relatively fast if FAT is cached in RAM 
-
-Cons
-Poor locality; Many seeks if FAT is on disk Poor random access Limited metadata Limited access control; No support for hard links; Limitations on volume and file size; No support for reliability strategies 
-//FFS(ext2/3/4 ) Combination of all the indexed-based (direct, indexed and multilevel indexed allocation )
-mate Type(), size, nos of (hl)to this, times, owner and permission
-Inode - Index structure (12 + 1024 + 1024^2 + 1024^3 blocks )
-Characteristics: tree, high degree, fixed structure simple, Asymmetric support small and large both
-Directory structure (array of 16-byte entries , . .., 4B for inode #, 14B for name(name length, file name)
-// Locality heuristics: block groups ？
-Pros: Efficient storage for both small and large files 
-Locality for both small and large files Locality for metadata and data 
-Cons: Inefficient for tiny files (a 1 byte file requires both an inode and a data block) Inefficient encoding when a file is mostly contiguous on disk Need to reserve 10% of free space to prevent fragmentation 
-
-
-compile steps
-http://www.cs.jhu.edu/~phi/csf/slides/lecture-compiling-c.pdf
-http://csapp.cs.cmu.edu/3e/ics3/link/linker.pdf
-http://csapp.cs.cmu.edu/3e/ics3/intro/compilation.pdf
-
-preprocessor 
-• Resolves constants (#define) • Adds additional source code (#include) • Handles other directives like #ifdef / #endif 
-compiler 
-•   Compilation into assembly code 
-assembler 
-•   Conversion into machine code 
-linker 
-•   Adds start-up code
-•   May combine multiple object files 
 
