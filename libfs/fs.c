@@ -26,6 +26,7 @@
 #define oprintf(format, ...) \
     fprintf (stdout, format, ##__VA_ARGS__)
 #define clamp(x, y) (((x) <= (y)) ? (x) : (y))
+#define pickmax(x, y) (((x) > (y)) ? (x) : (y))
 #define FAT_EOC 0xFFFF
 const static char FS_NAME[8] = "ECS150FS";
 
@@ -706,7 +707,7 @@ int fs_info(void)
     fat16 = fat;
     for (int i = 0; i < sp->data_blk_count; ++i, ++fat16)
     {
-        oprintf("fat[%d]:%d\t", i, *fat16);
+        oprintf("fat[%d]:%d\n", i, *fat16);
     }
 
     /* my info for debug
@@ -1085,18 +1086,14 @@ int fs_write(int fd, void *buf, size_t count)
     if(count == 0) return 0;
 
     size_t offset = filedes[fd]->offset;
-    size_t real_count = count;
-    int32_t leftover_count = real_count;
-    uint16_t write_blk;
-    size_t expand = 0;
-    uint16_t new_blk[8192];
-
     if(offset > w_dir_entry->file_sz)
         return -1;
 
+    /* start to write */
+
     w_dir_entry->unused[0] = 'w';
 
-    if( w_dir_entry->first_data_blk == FAT_EOC){ // empty file, no blk assign
+    if( w_dir_entry->first_data_blk == FAT_EOC){ // if empty file, no blk assign; we allocate a new block
         int32_t temp = get_free_blk_idx();
         if(temp < 0) return 0;
 
@@ -1107,17 +1104,17 @@ int fs_write(int fd, void *buf, size_t count)
         sp->fat_used += 1; // !!!!
     }
 
-    // size_t offset = filedes[fd]->offset;
-    // size_t real_count = count;
-    // int32_t leftover_count = real_count;
-    // uint16_t write_blk;
-    // size_t expand = 0;
-    // uint16_t new_blk[8192];
+    size_t real_count = count;
+    int32_t leftover_count = real_count;
+    uint16_t write_blk;
+    size_t expand = 0;
+    uint16_t new_blk[8192];
 
+    /* get the first block written to */
     if(offset == 0){
         write_blk = w_dir_entry->first_data_blk;
     }
-    else if(offset == w_dir_entry->file_sz){
+    else if(offset == w_dir_entry->file_sz){ // for appending 
         int32_t temp = get_free_blk_idx();
 
         if(temp < 0) {
@@ -1132,6 +1129,7 @@ int fs_write(int fd, void *buf, size_t count)
         write_blk = get_offset_blk(fd, offset);
     }
 
+    /* write the first block */
     void * bounce_buffer = calloc(BLOCK_SIZE, 1);
     int buf_idx = 0;
     if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
@@ -1148,9 +1146,77 @@ int fs_write(int fd, void *buf, size_t count)
         free(bounce_buffer);
         return 0;
     } // write the first blk
+    fat16 = get_fat(write_blk);
 
+    /* write the left-over data 
+     * if it's the last hold data block
+     * update filesize
+    */
+    while(leftover_count > 0){
+        if(*fat16 != FAT_EOC){ // write directly
+            write_blk = *fat16;
+            if(leftover_count > BLOCK_SIZE){ // block_write directly
+                if(block_write(sp->data_blk + write_blk, buf+buf_idx) < 0){
+                    w_dir_entry->unused[0] = 'n';
+                    free(bounce_buffer);
+                    break;
+                }
+                buf_idx += BLOCK_SIZE;
+                leftover_count -= BLOCK_SIZE;
+            }
+            else{
+                if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
+                    free(bounce_buffer);
+                    w_dir_entry->unused[0] = 'n';
+                    break;
+                }
+                memcpy(bounce_buffer, buf + buf_idx, leftover_count);
+                if(block_write(sp->data_blk + write_blk, buf+buf_idx) < 0){
+                    w_dir_entry->unused[0] = 'n';
+                    free(bounce_buffer);
+                    break;
+                }
+                leftover_count = 0;
+                break;
+            }
+        }
+        else{ // find the next valid block to write
+            int32_t temp = get_free_blk_idx();
+            if(temp < 0) {
+                w_dir_entry->unused[0] = 'n';
+                eprintf("fs_write: no block any more\n");
+                break; // no block available
+            }
+            write_blk = (uint16_t) temp;
 
-    
+            if(leftover_count > BLOCK_SIZE){
+                if(block_write(sp->data_blk + write_blk, buf+buf_idx) < 0){
+                    w_dir_entry->unused[0] = 'n';
+                    free(bounce_buffer);
+                    break;
+                }
+                buf_idx += BLOCK_SIZE;
+                leftover_count -= BLOCK_SIZE;
+            }
+            else {
+                memset(bounce_buffer, 0, BLOCK_SIZE);
+                memcpy(bounce_buffer, buf + buf_idx, leftover_count);
+                if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
+                    free(bounce_buffer);
+                    w_dir_entry->unused[0] = 'n';
+                    break;
+                }
+                leftover_count = 0;
+            }
+
+            *fat16 = write_blk; // at last update fat_used 
+            fat16 = get_fat(write_blk);
+            *fat16 = FAT_EOC;
+            sp->fat_used += 1;            
+        }
+        fat16 = get_fat(write_blk);
+    }
+    /* first version
     while(leftover_count > 0){
         // get the next written block
         if(expand > 0){
@@ -1195,8 +1261,7 @@ int fs_write(int fd, void *buf, size_t count)
         }
         leftover_count -= BLOCK_SIZE;
     } // while end
-
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+     
     
     //update the metadata
     if(leftover_count > 0) {
@@ -1207,7 +1272,6 @@ int fs_write(int fd, void *buf, size_t count)
     // else if(w_dir_entry->file_sz == 0){
     //     w_dir_entry->file_sz = real_count;
     // }
-    printf("2222222!!!!!!!!!!!!!!!!!!!!!!!\n");
     fat16 = get_fat(w_dir_entry->last_data_blk);
     size_t i = 0;
     sp->fat_used += expand;
@@ -1220,8 +1284,10 @@ int fs_write(int fd, void *buf, size_t count)
         expand -= 1;
     }
     *fat16 = 0xFFFF;
+    */
+    real_count -= leftover_count;
+    w_dir_entry->file_sz = pickmax(offset + real_count, w_dir_entry->file_sz);
 
-    printf("3333333!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     write_meta();
     w_dir_entry->unused[0] = 'n';
     if(bounce_buffer) free(bounce_buffer);
