@@ -355,7 +355,7 @@ void thread_fs_write(void *arg)
 	char* opt = NULL;
 
 	if (t_arg->argc < 5)
-		die("need <diskname> <filename> <buffer> <offset> <count> <opt>");
+		die("need <diskname> <filename> <buffer> <offset> <count> <opt>\nyou give %d arguments", t_arg->argc);
 
 	diskname = t_arg->argv[0];
 	filename = t_arg->argv[1];
@@ -394,7 +394,7 @@ void thread_fs_write(void *arg)
 		die("Offset out of boundary");
 	}
 
-	if(strcmp(opt, "file") == 0){
+	if(opt != NULL && strcmp(opt, "file") == 0){
 		;//write form one file to another file
 	}
 	else{ // char*, buffer
