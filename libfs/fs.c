@@ -884,7 +884,7 @@ int fs_ls(void)
     {
         // dir_entry = get_dir(i);
         if((dir_entry->filename)[0] != 0){
-            print_file(dir_entry, 1);
+            print_file(dir_entry, 0);
             // oprintf("file: %s, size: %d, data_blk: %d\n", dir_entry->filename, dir_entry->file_sz, dir_entry->first_data_blk);
         }
     }
