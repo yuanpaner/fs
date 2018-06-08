@@ -413,10 +413,13 @@ void thread_fs_write(void *arg)
 	printf("Write file '%s' (%d/%d bytes) with offset '%d'\n", filename, write, stat, offset);
 	printf("Content of the file:\n");
 	// printf("%.*s\n", (int)(stat-offset), buf);
-	struct thread_arg arg{
-		.argc = 3;
-		.argv = malloc(3*sizeof(char*));
-	};
+	// struct thread_arg arg = {
+	// 	.argc = 3;
+	// 	.argv = malloc(3*sizeof(char*));
+	// };
+	struct thread_arg arg
+	arg.argc = 3;
+	arg.argv = malloc(3*sizeof(char*));
 	arg.argv[0] = diskname;
 	arg.argv[1] = filename;
 	arg.argv[2] = '0';
