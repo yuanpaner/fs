@@ -422,7 +422,7 @@ void thread_fs_write(void *arg)
 	arg2.argv = malloc(3*sizeof(char*));
 	arg2.argv[0] = diskname;
 	arg2.argv[1] = filename;
-	arg2.argv[2] = '0';
+	arg2.argv[2] = "0";
 
 	thread_fs_read(&arg2);
 
