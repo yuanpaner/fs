@@ -29,7 +29,7 @@
 #define pickmax(x, y) (((x) > (y)) ? (x) : (y))
 #define FAT_EOC 0xFFFF
 const static char FS_NAME[8] = "ECS150FS";
-const int db = 1; // 1: debug, 0: no
+const int db = 0; // 1: debug, 0: no
 
 /******************* Data Structure *********************/
 /* Metadata format
