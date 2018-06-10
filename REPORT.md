@@ -17,8 +17,18 @@ read from files or write to files, etc.
 
 ## Semaphore API
 
+
+## Test
+write larger files  
+write a lot small files  
+write with offset  
+
+
+
 ## Problems in debugging  
-fs_read() -- cant't read the last block at first   
+fs_read()  
+√ cant't read the last block at first   
+when offset is 4096*x, there exists problem.
 fs_write() -- cant't written the last block at first   
 
   

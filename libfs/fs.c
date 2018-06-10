@@ -1501,9 +1501,11 @@ int fs_read(int fd, void *buf, size_t count)
     if(real_count == 0)
         return 0;
 
-    uint16_t read_blk = get_offset_blk(fd, offset);
+    uint16_t read_blk = get_offset_blk(fd, offset); // error when offset = 4096 * N
 
     if(read_blk == 0) return -1; // nothing can be read
+    if(offset > 0 && offset % BLOCK_SIZE == 0) 
+        read_blk += 1;
 
     //read first block
     int32_t leftover_count = real_count;
