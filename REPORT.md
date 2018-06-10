@@ -1,4 +1,5 @@
 ECS 150: Project #4 - File system  
+I finally finish it on June 9, 2018
 # General Information
 This project is to implement the support of a very simple file system based on  
 a FAT and supports up to 128 files in a single root directory.  
@@ -15,20 +16,20 @@ file system management. Through the FS layer, we can mount a virtual disk,
 list the files that are part of the disk, add or delete new files,  
 read from files or write to files, etc.
 
-## Semaphore API
+## Implementation of Read and Write
 
 
 ## Test
-write larger files  
+write small files within the limitation
+write larger files out of the limitation
 write a lot small files  
 write with offset  
 
-
-
+open a lot of files 
 ## Problems in debugging  
 fs_read()  
 √ cant't read the last block at first   
-when offset is 4096*x, there exists problem.
+√ when offset is 4096*x, there exists problem.
 fs_write() -- cant't written the last block at first   
 
   
@@ -54,3 +55,9 @@ https://www.cs.nmsu.edu/~jcook/Tools/pthreads/library.html
 https://en.wikipedia.org/wiki/Thread-local_storage  
 https://www.ibm.com/support/knowledgecenter/en/ssw_i5_54/apis/mprotect.htm  
 http://pubs.opengroup.org/onlinepubs/009696799/functions/mprotect.html  
+
+
+
+
+914517045
+999279751
