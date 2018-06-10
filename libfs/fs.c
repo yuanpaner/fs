@@ -1322,7 +1322,7 @@ int fs_write(int fd, void *buf, size_t count)
     real_count -= leftover_count;
     w_dir_entry->file_sz = pickmax(offset + real_count, w_dir_entry->file_sz);
     filedes[fd]->offset = offset;
-    
+
     write_meta();
     w_dir_entry->unused[0] = 'n';
     if(bounce_buffer) free(bounce_buffer);
@@ -1527,6 +1527,9 @@ int fs_read(int fd, void *buf, size_t count)
     memcpy(buf + buf_idx, bounce_buffer + offset % BLOCK_SIZE, clamp(leftover_count, BLOCK_SIZE - offset % BLOCK_SIZE));
 
     buf_idx += clamp(leftover_count, BLOCK_SIZE - offset % BLOCK_SIZE);
+
+    offset += buf_idx; // update offset
+
     // leftover_count -= BLOCK_SIZE; // error
     leftover_count -= buf_idx; // remaining
     if(leftover_count < 0) leftover_count = 0;
@@ -1540,6 +1543,8 @@ int fs_read(int fd, void *buf, size_t count)
             }
             buf_idx += BLOCK_SIZE;
             leftover_count -= BLOCK_SIZE;
+
+            offset += BLOCK_SIZE;
         }
         else{
             if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0){
@@ -1549,7 +1554,10 @@ int fs_read(int fd, void *buf, size_t count)
             memcpy(buf + buf_idx, bounce_buffer, leftover_count);
             buf_idx += leftover_count; // unnecessary acutally
             leftover_count = 0;
+
+            offset += leftover_count;
         }
+
         // real_count_temp -= BLOCK_SIZE;
         read_blk = *(get_fat(read_blk));
     }
@@ -1558,6 +1566,7 @@ int fs_read(int fd, void *buf, size_t count)
     real_count -= leftover_count;
     if(fs_lseek(fd, real_count + offset) < 0) return -1;
 
+    filedes[fd]->offset = offset;
     return real_count - leftover_count;
 }
 
