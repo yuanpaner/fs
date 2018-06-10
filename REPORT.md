@@ -1,5 +1,11 @@
 ECS 150: Project #4 - File system  
 I finally finish it on June 9, 2018
+
+question:   
+How to avoid conflict writing to the same file? System has a global fiel table,  
+how could we implement this in user level?  
+
+
 # General Information
 This project is to implement the support of a very simple file system based on  
 a FAT and supports up to 128 files in a single root directory.  
@@ -20,12 +26,20 @@ read from files or write to files, etc.
 
 
 ## Test
-write small files within the limitation
-write larger files out of the limitation
-write a lot small files  
-write with offset  
+add small files within the limitation √  
+add larger files out of the limitation 
+add a lot small files  √  
 
-open a lot of files 
+write with offset √  
+write with offset out of the limitation  
+
+read file √ 
+read file with offset  √  
+read in many different places, observe the offset  
+
+open one file many times  
+
+
 ## Problems in debugging  
 fs_read()  
 √ cant't read the last block at first   

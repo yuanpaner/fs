@@ -1175,7 +1175,7 @@ int fs_write(int fd, void *buf, size_t count)
         *fat16 = FAT_EOC;
         sp->fat_used += 1;
     }
-        
+    offset += buf_idx;
 
     /* write the left-over data 
      * if it's the last hold data block
@@ -1192,6 +1192,7 @@ int fs_write(int fd, void *buf, size_t count)
                 }
                 buf_idx += BLOCK_SIZE;
                 leftover_count -= BLOCK_SIZE;
+                offset += BLOCK_SIZE;
             }
             else{
                 if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
@@ -1205,6 +1206,7 @@ int fs_write(int fd, void *buf, size_t count)
                     free(bounce_buffer);
                     break;
                 }
+                offset += leftover_count;
                 leftover_count = 0;
                 break;
             }
@@ -1226,6 +1228,7 @@ int fs_write(int fd, void *buf, size_t count)
                 }
                 buf_idx += BLOCK_SIZE;
                 leftover_count -= BLOCK_SIZE;
+                offset += BLOCK_SIZE;
             }
             else {
                 memset(bounce_buffer, 0, BLOCK_SIZE);
@@ -1236,6 +1239,7 @@ int fs_write(int fd, void *buf, size_t count)
                     break;
                 }
 
+                offset += leftover_count;
                 leftover_count = 0;
             }
 
@@ -1317,7 +1321,8 @@ int fs_write(int fd, void *buf, size_t count)
     */
     real_count -= leftover_count;
     w_dir_entry->file_sz = pickmax(offset + real_count, w_dir_entry->file_sz);
-
+    filedes[fd]->offset = offset;
+    
     write_meta();
     w_dir_entry->unused[0] = 'n';
     if(bounce_buffer) free(bounce_buffer);
