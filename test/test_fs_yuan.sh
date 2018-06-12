@@ -373,8 +373,8 @@ run_tests() {
 	run_fs_info_full
 	# Phase 2
 	run_fs_simple_create
-    run_fs_xM_create # yuan
-	run_fs_create_multiple
+    run_fs_xM_create # yuan: add large file
+	run_fs_create_multiple # yuan: add two with test_fs.x, ls with fs_ref.x, within boundary
 }
 
 make_fs() {

@@ -79,6 +79,39 @@ read in many different places, observe the offset
 
 open one file many times  √
 
+### test_fs_yuan.h  
+Add some corner cases to write into the disk.
+```c
+run_tests() {
+    # Phase 1
+    run_fs_info
+    run_fs_info_full
+    # Phase 2
+    run_fs_simple_create
+    run_fs_xM_create # yuan: add large file
+    run_fs_create_multiple # yuan: add two with test_fs.x, ls with fs_ref.x, within boundary
+}
+```
+
+### test_fs.c
+Add `read`, `readm` and `write` to test the cases of RW with offset.  
+```c
+static struct {
+    const char *name;
+    void(*func)(void *);
+} commands[] = {
+    { "info",   thread_fs_info },
+    { "ls",     thread_fs_ls },
+    { "add",    thread_fs_add },
+    { "rm",     thread_fs_rm },
+    { "cat",    thread_fs_cat },
+    { "stat",   thread_fs_stat },
+    { "read",   thread_fs_read }, // exefile read <diskname> <filename> <offset>
+    { "readm",  thread_fs_read_multiple }, // open multiple files and read, exefile read <diskname> <filename> <iterations>
+    { "write",  thread_fs_write }, // write <diskname> <filename> <buffer> <offset> <count> <opt>
+};
+```
+
 
 ## Problems in debugging  
 fs_read()  
