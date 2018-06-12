@@ -271,7 +271,7 @@ int get_valid_directory_entry(const char * filename, void *  entry_ptr){
 
 /* get the dir entry id by filename; pass the entry pointer to @entry_ptr
 */
-int get_directory_entry(const char * filename, void *  entry_ptr){
+int get_directory_entry(const char * filename, void ** entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
@@ -283,7 +283,7 @@ int get_directory_entry(const char * filename, void *  entry_ptr){
 
         if(strcmp(tmp->filename, filename) == 0){
             if(entry_ptr)
-                *((struct RootDirEntry *)entry_ptr) = *tmp;
+                *entry_ptr = tmp;
             return i;
         }
     }
@@ -826,12 +826,13 @@ int fs_create(const char *filename)
     //     eprintf("fs_create: root directory full error\n");
     //     return -1;
     // }
-    int entry_id = get_valid_directory_entry(filename, NULL);
+    int entry_id = get_valid_directory_entry(filename, (void *)&dir_entry);
     if(entry_id < 0)
         return -1; // no valid dir entry 
     // the ith entry is available
     // dir_entry = root_dir + entry_id * sizeof(struct RootDirEntry);
-    dir_entry = get_dir(entry_id); 
+    
+    // dir_entry = get_dir(entry_id); 
     strcpy(dir_entry->filename, filename);
     dir_entry->file_sz = 0;
     dir_entry->open = 0;
@@ -863,9 +864,10 @@ int fs_delete(const char *filename)
 {
     /* TODO: Phase 2 */
     struct RootDirEntry * cur_entry = NULL;
-    int entry_id = get_directory_entry(filename, NULL);
+    int entry_id = get_directory_entry(filename, (void *)&cur_entry);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
-    cur_entry = get_dir(entry_id);
+    // cur_entry = get_dir(entry_id);
+
     // or if file @filename is currently open. 0 otherwise.
 
     // cur_entry = root_dir + sizeof(struct RootDirEntry) * entry_id;
@@ -961,14 +963,14 @@ int fs_open(const char *filename)
     if(fd_cnt >= FS_OPEN_MAX_COUNT || filename == NULL || strlen(filename) == 0 || strlen(filename) >= FS_FILENAME_LEN) // from TA: neglects to check for empty string
         return -1;
 
-    int entry_id = get_directory_entry(filename, NULL);
+    int entry_id = get_directory_entry(filename, (void *)&dir_entry);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
 
     int fd = get_valid_fd();
     if(fd < 0) return -1;
 
-    dir_entry = get_dir(entry_id);
+    // dir_entry = get_dir(entry_id);
     // ++(dir_entry->open); // not here
 
     filedes[fd] = malloc(sizeof(struct FileDescriptor));
