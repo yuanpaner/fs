@@ -1546,11 +1546,11 @@ int fs_read(int fd, void *buf, size_t count)
     //read first block
     int32_t leftover_count = real_count;
     // void *bounce_buffer = calloc(BLOCK_SIZE, 1);
-    void *bounce_buffer = malloc(BLOCK_SIZE);
+    char bounce_buffer[BLOCK_SIZE]; //void *bounce_buffer = malloc(BLOCK_SIZE);
     memset(bounce_buffer, 0, BLOCK_SIZE);
     int buf_idx = 0;
     if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0 ){
-        free(bounce_buffer);
+        // free(bounce_buffer);
         return -1;
     }
 
@@ -1569,7 +1569,7 @@ int fs_read(int fd, void *buf, size_t count)
     while(leftover_count > 0 && read_blk != FAT_EOC){
         if(leftover_count >= BLOCK_SIZE){
             if(block_read(read_blk + sp->data_blk, buf + buf_idx) < 0){
-                free(bounce_buffer);
+                // free(bounce_buffer);
                 return -1;
             }
             buf_idx += BLOCK_SIZE;
@@ -1593,7 +1593,7 @@ int fs_read(int fd, void *buf, size_t count)
         read_blk = *(get_fat(read_blk));
     }
 
-    free(bounce_buffer);
+    // free(bounce_buffer);
     real_count -= leftover_count;
     if(fs_lseek(fd, real_count + offset) < 0) return -1;
 
