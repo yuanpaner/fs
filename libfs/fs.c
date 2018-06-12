@@ -118,7 +118,7 @@ union Block {
 char * disk = NULL; //virtual disk name pointer. redundant acutally, from TA: Isn't really a reason to hold onto the name
 struct SuperBlock * sp = NULL;  // superblock pointer
 
-direntry_t * root_dir = NULL;         // root directory pointer
+direntry_t  root_dir = NULL;         // root directory pointer
 // struct RootDirEntry * dir_entry = NULL; //from Joël: better not to use any global variable if not necessary
 
 uint16_t * fat = NULL;              //FAT block pointer
@@ -1616,7 +1616,7 @@ int fs_read(int fd, void *buf, size_t count)
     // if(fs_lseek(fd, real_count + offset) < 0) return -1;
 
     filedes[fd]->offset = offset;
-    
+
     return real_count - leftover_count;
 }
 
