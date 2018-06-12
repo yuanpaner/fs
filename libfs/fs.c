@@ -1347,7 +1347,7 @@ int fs_write(int fd, void *buf, size_t count)
     *fat16 = 0xFFFF;
     */
     real_count -= leftover_count;
-    w_dir_entry->file_sz = pickmax(offset + real_count, w_dir_entry->file_sz);
+    w_dir_entry->file_sz = pickmax(filedes[fd]->offset + real_count, w_dir_entry->file_sz); //should not use offset
     filedes[fd]->offset = offset;
 
     write_meta();
