@@ -407,7 +407,7 @@ void thread_fs_read_multiple(void *arg)
 	}
 	for (int i = 0; i < itr; ++i)
 	{
-		if(fs_fd[i] > 0){
+		if(fs_fd[i] >= 0){
 			if(fs_close(fs_fd[i]))
 				test_fs_error("Cannot close file");
 		}
