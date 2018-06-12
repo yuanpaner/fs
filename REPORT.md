@@ -33,15 +33,17 @@ In a work, I take the first and last written blocks specially.
 At each writing during the whole procedure, I check whether the current block is the last block the current file hold. If so, I search the next avaliable block to expand the file size and continue writing if capable, so the writing operaton will do as much as possbile.  
 
 ## Questions and Answers
-1. 
-About `pass by reference` in C, use `void * * ` in function argument  
+
+1. About `pass by reference` in C, use `void * * ` in function argument  
+
 ```c
+//inspired by discussion lecture <main>  
 int get_valid_directory_entry(const char * filename, void ** entry_ptr)
 ```
-inspired by lecture <main>  
 
-2. 
-Memory allocation  from Bradley  
+
+2. Memory allocation  from Bradley  
+
 "If you only need the memory for the duration of a function and know the size beforehand, allocating on the stack may be better because you avoid the overhead of needing to request memory from the system and marking it used."  
 
 It actually usually uses page sharing to get the memory but it still requires marking the memory for use. 
@@ -83,26 +85,119 @@ fs_write() -- cant't written the last block at first
 
 
   
+## Source - Piazza
+@453   
+```c
+fs_info() should print the entire output generate when you enter "./fs_ref.x info ...".
+The values you need to print are:
+total_blk_count = total number of blocks
+fat_blk_count = number of FAT blocks
+rdir_blk = Index of root directory
+data_blk = Index of first data block in virtual disk
+data_blk_count = number of data blocks
+fat_free_ratio = Number of FAT entries available (free) / number of data blocks
+rdir_free_ratio = Number of root directory entries available (free) / size of root directory  
+```
+@421  
+Since the value 0 denotes that a FAT entry is available, the data block #0 can never be allocated to a file. That's why this data block is simply lost.  
+
+@493  char *, null terminator  
+By definition a C string is a character array that has a null character at the end to denote the end of the string.
+However the memory pointed to by a char* need not be NULL terminated character array. (It's just a pointer to memory, the char* is just to indicate to compiler as to how many bytes it should add/ subtract when doing pointer arithmetic)  
+https://stackoverflow.com/questions/47288881/are-c-constant-character-strings-always-null-terminated  
+https://softwareengineering.stackexchange.com/questions/344603/are-c-strings-always-null-terminated-or-does-it-depend-on-the-platform  
+
+@520 RW fails doesn't mean disk fails, good points  
+block_write failing doesn't always mean disk failure, it could just be the block that failed.
+
+  
 ## Source
-* discussion on Piazza  
+Variadic  Macro  
+https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html  
+Struct packed  
+https://stackoverflow.com/questions/11770451/what-is-the-meaning-of-attribute-packed-aligned4  
+https://www.geeksforgeeks.org/structure-member-alignment-padding-and-data-packing/  
 
-* semaphore  
-lecture slides  
+Integer  
+https://www.gnu.org/software/libc/manual/html_node/Integers.html  
 
-* segment fault handler  
-http://devarea.com/linux-writing-fault-handlers/#.WvPc52bMzOQ  
+FS  
+http://www.cs.cornell.edu/courses/cs4410/2010fa/CS4411/slides/project6/project6.pdf  
+https://gitlab.com/nd-cse-30341-fa17/cse-30341-fa17-project06  
 
-* mmap()  
-https://notes.shichao.io/lkd/ch15/  
-https://techoverflow.net/2013/08/21/a-simple-mmap-readonly-example/  
-https://gist.github.com/marcetcheverry/991042  
+FAT / innode  
+http://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf
+http://www.tavi.co.uk/phobos/fat.html  
+https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system  
+https://www.pjrc.com/tech/8051/ide/fat32.html  
+http://www.c-jump.com/CIS24/Slides/FAT/lecture.html#F01_0010_overview  
+https://www.pjrc.com/tech/8051/ide/fat32.html  
 
-* pthread  
-http://pubs.opengroup.org/onlinepubs/7908799/xsh/pthread.h.html  
-https://www.cs.nmsu.edu/~jcook/Tools/pthreads/library.html  
+project  
+http://www.openvirtualization.org/documentation/fat32_8c_source.html  
+http://codeandlife.com/2012/04/07/simple-fat-and-sd-tutorial-part-2/   !!!
 
-* TPS / TLS(thread local storage)  
-https://en.wikipedia.org/wiki/Thread-local_storage  
-https://www.ibm.com/support/knowledgecenter/en/ssw_i5_54/apis/mprotect.htm  
-http://pubs.opengroup.org/onlinepubs/009696799/functions/mprotect.html  
+links  
+https://www.edaboard.com/showthread.php?176568-C-code-for-FAT-file-implementation-using-PIC18F4550
+  
 
+
+## Source II 
+Virtual Filesystem (VFS) in Linux  
+https://www.tldp.org/LDP/lki/lki-3.html  
+
+FCB  
+http://www.cs.odu.edu/~cs471w/spring11/lectures/FileSystemImplementation.htm  
+https://cs.nyu.edu/~mwalfish/classes/15sp/labs/lab6.html  
+
+Block and Cluster  
+https://unix.stackexchange.com/questions/14409/difference-between-block-size-and-cluster-size  
+
+Mounting Definition (Linux)  
+http://www.linfo.org/mounting.html  
+
+memcpy and strcpy  
+https://stackoverflow.com/questions/2898364/strcpy-vs-memcpy  
+
+align in C  
+https://wr.informatik.uni-hamburg.de/_media/teaching/wintersemester_2013_2014/epc-14-haase-svenhendrik-alignmentinc-paper.pdf  
+
+Cstring in C, null terminator  
+https://stackoverflow.com/questions/17522327/is-null-character-included-while-allocating-using-malloc  
+Conceptually the null terminator is just a convenient way of marking the end of a string. The C standard library exploits this convention when modelling a string. For example, strlen computes the length of a string by examining the memory from the input location (probably a char*) until it reaches a null terminator; but the null terminator itself is not included in the length. But it's still part of the memory consumed by the string.  
+
+Calloc and malloc  
+https://www.tutorialspoint.com/c_standard_library/c_function_calloc.htm  
+strcpy, strncpy, memset, memcpy  
+https://stackoverflow.com/questions/11830979/c-strcpy-function-copies-null  
+
+
+struct stat, and fstat  
+http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html  
+http://pubs.opengroup.org/onlinepubs/009695399/functions/fstat.html  
+
+Union  
+https://www.geeksforgeeks.org/difference-structure-union-c/  
+
+
+bash, shell, command  
+https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html  
+> BASH_SOURCE[0]  
+
+https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source  
+http://www.tutorialspoint.com/unix/unix-special-variables.htm  
+> ||   
+
+make > /dev/null 2>&1 ||  
+        die "Compilation failed"  
+https://unix.stackexchange.com/questions/325705/why-is-pattern-command-true-useful  
+> "$@", "$*", $*  
+
+https://stackoverflow.com/questions/9994295/what-does-mean-in-a-shell-script  
+{, , }  
+[A..Z]  
+
+> dd  
+
+makefile  
+https://www.gnu.org/software/make/manual/html_node/Wildcard-Function.html 
