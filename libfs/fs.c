@@ -557,11 +557,11 @@ int fs_mount(const char *diskname)
 {
     if (block_disk_open(diskname) != 0) return -1;
     
-    // if(init_alloc() < 0) return -1; // allocate error
+    if(init_alloc() < 0) return -1; // allocate error
 
     /* super block read */
-    sp = malloc(BLOCK_SIZE); 
-    if(sp == NULL) { clear(); return -1; }
+    // sp = malloc(BLOCK_SIZE); 
+    // if(sp == NULL) { clear(); return -1; }
 
     // memset(sp, 0, BLOCK_SIZE); // from TA: memset is redundant since you're overwriting the whole block anyway.
     if(block_read(0, (void *)sp) < 0) { clear(); return -1; }
@@ -584,9 +584,9 @@ int fs_mount(const char *diskname)
     }
 
     /* root_dir read; fat block read */
-    root_dir = malloc(BLOCK_SIZE);
-    if(root_dir == NULL) { clear(); return -1; }
-    memset(root_dir, 0, BLOCK_SIZE);
+    // root_dir = malloc(BLOCK_SIZE);
+    // if(root_dir == NULL) { clear(); return -1; }
+    // memset(root_dir, 0, BLOCK_SIZE);
     if(block_read(sp->rdir_blk, root_dir) < 0){
         eprintf("fs_mount: read root dir error\n");
         clear(); 
@@ -597,9 +597,9 @@ int fs_mount(const char *diskname)
     dir_entry = (struct RootDirEntry *)root_dir;
     
 
-    fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
-    if(fat == NULL) { clear(); return -1; }
-    memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
+    // fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
+    // if(fat == NULL) { clear(); return -1; }
+    // memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);
     for (int i = 0; i < sp->fat_blk_count; ++i)
     {
         if(block_read(i+1, fat + BLOCK_SIZE * i) < 0){
@@ -612,9 +612,9 @@ int fs_mount(const char *diskname)
     fat16 = (uint16_t *)fat;
 
 
-    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
-        filedes[i] = NULL;
-    fd_cnt = 0;
+    // for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+    //     filedes[i] = NULL;
+    // fd_cnt = 0;
 
     disk = malloc(strlen(diskname) + 1);
     strcpy(disk, diskname);
