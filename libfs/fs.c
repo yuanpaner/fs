@@ -21,7 +21,7 @@
 /** Maximum number of open files */
 // #define FS_OPEN_MAX_COUNT 32
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
     #define eprintf(format, ...) fprintf (stderr, format, ##__VA_ARGS__)
     #define oprintf(format, ...) fprintf (stdout, format, ##__VA_ARGS__)
