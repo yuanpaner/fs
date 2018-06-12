@@ -387,7 +387,7 @@ void sp_setup(){
     //     return ; // no need to set, has already been written
 
     direntry_t dir_entry = root_dir;
-    uint16_t fat16 = fat;
+    uint16_t * fat16 = fat;
 
     sp->fat_used = 1;
     sp->rdir_used = 0;
@@ -936,7 +936,7 @@ int fs_ls(void)
     oprintf("FS Ls:\n");
 
     // dir_entry = get_dir(0);
-    dir_entry = (struct RootDirEntry *)root_dir;
+    direntry_t dir_entry = root_dir;
 
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, ++dir_entry)
     {
