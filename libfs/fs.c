@@ -1579,7 +1579,7 @@ int fs_read(int fd, void *buf, size_t count)
         }
         else{
             if(block_read(read_blk + sp->data_blk, bounce_buffer) < 0){
-                free(bounce_buffer);
+                // free(bounce_buffer);
                 return -1;
             }
             memcpy(buf + buf_idx, bounce_buffer, leftover_count);
