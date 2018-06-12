@@ -237,7 +237,7 @@ int get_valid_directory_entry(const char * filename, void ** entry_ptr){
     }
 
     if(res != -1 && entry_ptr)
-        *entry_ptr = root_dir + i * sizeof(struct RootDirEntry);
+        *entry_ptr = root_dir + res * sizeof(struct RootDirEntry);
     return res;
 }
 /* version 1.0
@@ -972,7 +972,7 @@ int fs_open(const char *filename)
     // ++(dir_entry->open); // not here
 
     filedes[fd] = malloc(sizeof(struct FileDescriptor));
-    if(fildes[fd] == NULL) return -1;
+    if(filedes[fd] == NULL) return -1;
 
     filedes[fd]->file_entry = dir_entry;
     filedes[fd]->offset = 0;
