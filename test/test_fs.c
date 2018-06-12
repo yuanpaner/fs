@@ -535,7 +535,7 @@ static struct {
 	{ "cat",	thread_fs_cat },
 	{ "stat",	thread_fs_stat },
 	{ "read",	thread_fs_read },
-	{ "readm",	thread_fs_read_multiple },
+	{ "readm",	thread_fs_read_multiple }, // open multiple files and read
 	{ "write",	thread_fs_write },
 };
 
