@@ -491,23 +491,38 @@ void clear(){
 */
 int init_alloc(){
 
+    sp = calloc(BLOCK_SIZE, 1);
+    root_dir = calloc(BLOCK_SIZE, 1);
+    if(sp == NULL || root_dir == NULL){
+        clear();
+        return -1;
+    }
 
+    fat = calloc(BLOCK_SIZE, sp->fat_blk_count);
+    if(fat == NULL){
+        clear();
+        return -1;
+    }
+
+    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
+        filedes[i] = NULL;
+    fd_cnt = 0;
+
+    /*
     sp = malloc(BLOCK_SIZE); 
-    // sp = calloc(BLOCK_SIZE,1); 
+
     if(sp == NULL) {
         clear();
         return -1;
     }
 
-    root_dir = malloc(BLOCK_SIZE);
-    // root_dir = calloc(BLOCK_SIZE,1);
+    root_dir = malloc(BLOCK_SIZE); // root_dir = calloc(BLOCK_SIZE,1);
     if(root_dir == NULL) {
         clear();
         return -1;
     }
 
-    fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
-    // fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
+    fat = malloc(BLOCK_SIZE * sp->fat_blk_count); // fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
     if(fat == NULL) {
         clear();
         return -1;
@@ -521,7 +536,7 @@ int init_alloc(){
     memset(root_dir, 0, BLOCK_SIZE);
     memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);    
     
-    // dir_entry = get_dir(0);  
+    */
 
     return 0;   
 }
