@@ -873,7 +873,7 @@ int fs_create(const char *filename)
 int fs_delete(const char *filename)
 {
     /* TODO: Phase 2 */
-    direntry_t * cur_entry = NULL;
+    direntry_t cur_entry = NULL;
     int entry_id = get_directory_entry(filename, (void *)&cur_entry);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // cur_entry = get_dir(entry_id);
@@ -1146,7 +1146,7 @@ int fs_write(int fd, void *buf, size_t count)
 {
     if(!is_valid_fd(fd)) return -1;
 
-    direntry_t * w_dir_entry = filedes[fd]->file_entry;
+    direntry_t w_dir_entry = filedes[fd]->file_entry;
     if(w_dir_entry->unused[0] == 'w'){ // from Bradley: Really should not be making your operations dependent on parts of the data in the padding regions.
         eprintf("other writing continues, unable to write\n");
         return -1;
