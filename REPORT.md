@@ -16,6 +16,9 @@ after the whole operation done?
 Line 840 about touch it. could i use the unused bits and write back to disk to  
 avoid writing the same file from diff places?
 
+If I shouldn't use the unused bits in file system which has no guarantee that  
+others also write under the same rules.
+
 # General Information
 This project is to implement the support of a very simple file system based on  
 a FAT and supports up to 128 files in a single root directory.  
@@ -34,6 +37,34 @@ read from files or write to files, etc.
 
 ## Implementation of Read and Write  
 Read
+
+## Questions and Answers
+1. 
+About `pass by reference` in C, use `void * * ` in function argument  
+```c
+int get_valid_directory_entry(const char * filename, void ** entry_ptr)
+```
+inspired by lecture <main>  
+
+2. 
+Memory allocation  from Bradley  
+"If you only need the memory for the duration of a function and know the size beforehand, allocating on the stack may be better because you avoid the overhead of needing to request memory from the system and marking it used."  
+
+It actually usually uses page sharing to get the memory but it still requires marking the memory for use. 
+If you need memory you can just declare a char bounce_buffer[BLOCK_SIZE] and the compiler will just use the memory that's already available on the stack and you won't have to call free() later since it's naturally freed when we simply stop caring about that part of the stack.  
+
+Calloc and malloc and other heap memory allocation is more useful when you either don't know how much memory you need until runtime, or you need the memory to be available after you return from the function.   
+It's just an efficiency thing. Well the main thing is that the stack is naturally freed when we just move the stack pointer.  
+Allocation on the heap requires the extra step to mark the memory as being used and asking the libc library to manage it for you
+or if you use other allocation functions like mmap then you need to ask the kernel to mark the memory.  
+And frequent allocation and deallocation can lead to fragmentation of heap space.  
+
+One fun thing to try, if you call calloc or malloc then memset 0. You'll find that calloc happens far faster; it has to do with copy on write. 
+(you should try researching that on your own if you want the gritty details).  
+
+The *alloc variants are pretty mnemonic - clear-alloc, memory-alloc, re-alloc  
+https://stackoverflow.com/questions/1538420/difference-between-malloc-and-calloc  
+
 
 ## Test
 add small files within the limitation √  
@@ -55,6 +86,7 @@ fs_read()
 √ cant't read the last block at first   
 √ when offset is 4096*x, there exists problem.
 fs_write() -- cant't written the last block at first   
+
 
   
 ## Source

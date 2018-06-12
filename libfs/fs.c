@@ -831,7 +831,7 @@ int fs_create(const char *filename)
         return -1; // no valid dir entry 
     // the ith entry is available
     // dir_entry = root_dir + entry_id * sizeof(struct RootDirEntry);
-    
+
     // dir_entry = get_dir(entry_id); 
     strcpy(dir_entry->filename, filename);
     dir_entry->file_sz = 0;
@@ -1181,10 +1181,12 @@ int fs_write(int fd, void *buf, size_t count)
     }
 
     /* write the first block */
-    void * bounce_buffer = calloc(BLOCK_SIZE, 1); // from Bradley: If you only need the memory for the duration of a function and know the size beforehand, allocating on the stack may be better because you avoid the overhead of needing to request memory from the system and marking it used.
+    char bounce_buffer[BLOCK_SIZE]; // save free 
+    memset(bounce_buffer, 0, BLOCK_SIZE);
+    // void * bounce_buffer = calloc(BLOCK_SIZE, 1); // from Bradley: If you only need the memory for the duration of a function and know the size beforehand, allocating on the stack may be better because you avoid the overhead of needing to request memory from the system and marking it used.
     int buf_idx = 0;
     if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){ // from Bradley, Should not always have to read.
-        free(bounce_buffer);
+        // free(bounce_buffer);
         w_dir_entry->unused[0] = 'n';
         return 0;
     }
@@ -1196,7 +1198,7 @@ int fs_write(int fd, void *buf, size_t count)
     leftover_count -= buf_idx;
     if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
         w_dir_entry->unused[0] = 'n';
-        free(bounce_buffer);
+        // free(bounce_buffer);
         return 0;
     } // write the first blk
     fat16 = get_fat(write_blk);
@@ -1216,7 +1218,7 @@ int fs_write(int fd, void *buf, size_t count)
             if(leftover_count > BLOCK_SIZE){ // block_write directly
                 if(block_write(sp->data_blk + write_blk, buf+buf_idx) < 0){
                     w_dir_entry->unused[0] = 'n';
-                    free(bounce_buffer);
+                    // free(bounce_buffer);
                     break;
                 }
                 buf_idx += BLOCK_SIZE;
@@ -1225,14 +1227,14 @@ int fs_write(int fd, void *buf, size_t count)
             }
             else{
                 if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
-                    free(bounce_buffer);
+                    // free(bounce_buffer);
                     w_dir_entry->unused[0] = 'n';
                     break;
                 }
                 memcpy(bounce_buffer, buf + buf_idx, leftover_count);
                 if(block_write(sp->data_blk + write_blk, buf+buf_idx) < 0){
                     w_dir_entry->unused[0] = 'n';
-                    free(bounce_buffer);
+                    // free(bounce_buffer);
                     break;
                 }
                 offset += leftover_count;
@@ -1252,7 +1254,7 @@ int fs_write(int fd, void *buf, size_t count)
             if(leftover_count > BLOCK_SIZE){
                 if(block_write(sp->data_blk + write_blk, buf+buf_idx) < 0){
                     w_dir_entry->unused[0] = 'n';
-                    free(bounce_buffer);
+                    // free(bounce_buffer);
                     break;
                 }
                 buf_idx += BLOCK_SIZE;
@@ -1263,7 +1265,7 @@ int fs_write(int fd, void *buf, size_t count)
                 memset(bounce_buffer, 0, BLOCK_SIZE);
                 memcpy(bounce_buffer, buf + buf_idx, leftover_count);
                 if(block_write(write_blk + sp->data_blk, bounce_buffer) < 0 ){
-                    free(bounce_buffer);
+                    // free(bounce_buffer);
                     w_dir_entry->unused[0] = 'n';
                     break;
                 }
@@ -1354,7 +1356,7 @@ int fs_write(int fd, void *buf, size_t count)
 
     write_meta();
     w_dir_entry->unused[0] = 'n';
-    if(bounce_buffer) free(bounce_buffer);
+    // if(bounce_buffer) free(bounce_buffer);
     
     return real_count;
 }
