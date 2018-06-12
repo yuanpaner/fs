@@ -910,7 +910,7 @@ int fs_delete(const char *filename)
  */
 
 void print_file(struct RootDirEntry * fentry, bool debug){
-    oprintf("file: %s, size: %d, data_blk: %d\n", fentry->filename, fentry->file_sz, fentry->first_data_blk);
+    printf("file: %s, size: %d, data_blk: %d\n", fentry->filename, fentry->file_sz, fentry->first_data_blk);
     // for debug, print fat
     if(debug && fentry->first_data_blk != FAT_EOC){ // Joël: put debug in front to make it clear if I use it like this, but I change my mind
         oprintf("open: %d\n", fentry->open);
@@ -933,7 +933,7 @@ int fs_ls(void)
         return -1;
     }
 
-    oprintf("FS Ls:\n");
+    printf("FS Ls:\n");
 
     // dir_entry = get_dir(0);
     direntry_t dir_entry = root_dir;
