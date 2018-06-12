@@ -498,7 +498,8 @@ int init_alloc(){
         return -1;
     }
 
-    fat = calloc(BLOCK_SIZE, sp->fat_blk_count);
+    if(block_read(0, (void *)sp) < 0) { clear(); return -1; }
+    fat = calloc(BLOCK_SIZE, sp->fat_blk_count); // need reading sp block!!!
     if(fat == NULL){
         clear();
         return -1;
@@ -559,14 +560,14 @@ int fs_mount(const char *diskname)
     disk = malloc(strlen(diskname) + 1);
     strcpy(disk, diskname);
 
-    if(init_alloc() < 0) return -1; // allocate error
+    if(init_alloc() < 0) return -1; // fail why
 
     /* super block read */
     // sp = malloc(BLOCK_SIZE); 
     // if(sp == NULL) { clear(); return -1; }
 
     // memset(sp, 0, BLOCK_SIZE); // from TA: memset is redundant since you're overwriting the whole block anyway.
-    if(block_read(0, (void *)sp) < 0) { clear(); return -1; }
+    // if(block_read(0, (void *)sp) < 0) { clear(); return -1; } // put into init_alloc
     if(strncmp(sp->signature, FS_NAME, 8) != 0){
         clear();
         eprintf("fs_mount: non ECS150FS file system\n");
@@ -596,7 +597,7 @@ int fs_mount(const char *diskname)
     }
 
     // dir_entry = get_dir(0);
-    dir_entry = (struct RootDirEntry *)root_dir;
+    // dir_entry = (struct RootDirEntry *)root_dir;
     
 
     // fat = malloc(BLOCK_SIZE * sp->fat_blk_count);
