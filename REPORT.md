@@ -1,8 +1,8 @@
 ECS 150: Project #4 - File system  
 I finally finish it on June 9, 2018
 
-<strong>Question:</storng>   
-    
+<strong>Question:</strong>   
+
 - [ ] How to read and write efficiently? I update after each block read and write, read and write the first block specially and continue the next blocks if exist.  
 Each time I check the remaining part to do this.  
 
