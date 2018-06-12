@@ -1,20 +1,21 @@
 ECS 150: Project #4 - File system  
 I finally finish it on June 9, 2018
 
-question:   
-How to read and write efficiently? I update after each block read and write, read and write the first block specially and continue the next blocks if exist.  
+<strong>Question:</storng>   
+    
+- [ ] How to read and write efficiently? I update after each block read and write, read and write the first block specially and continue the next blocks if exist.  
 Each time I check the remaining part to do this.  
 
-How to avoid conflict writing to the same file? System has a global fiel table, how could we implement this in user level?  
+- [ ] How to avoid conflict writing to the same file? System has a global fiel table, how could we implement this in user level?  
 (final) file directory vs metadata ? first block not good enough?
 
-How to update offset better? write or read a block and update it immediately or after the whole operation done?
+- [ ] How to update offset better? write or read a block and update it immediately or after the whole operation done?
 
-Line 840 about touch it. could i use the unused bits and write back to disk to avoid writing the same file from diff places?
+- [ ] Line 840 about touch it. could i use the unused bits and write back to disk to avoid writing the same file from diff places?
 
-If I shouldn't use the unused bits in file system which has no guarantee that others also write under the same rules.  
+- [ ] If I shouldn't use the unused bits in file system which has no guarantee that others also write under the same rules.  
 
-How to make the read and write efficiency?  
+- [ ] How to make the read and write efficiency?  
 
 # General Information
 This project is to implement the support of a very simple file system based on a FAT and supports up to 128 files in a single root directory.  
@@ -61,7 +62,7 @@ https://stackoverflow.com/questions/1538420/difference-between-malloc-and-calloc
 
 ## Test
 add small files within the limitation √  
-add larger files out of the limitation 
+add larger files out of the limitation  √
 add a lot small files  √  
 
 write with offset √  
@@ -71,13 +72,13 @@ read file √
 read file with offset  √  
 read in many different places, observe the offset  
 
-open one file many times  
+open one file many times  √
 
 
 ## Problems in debugging  
 fs_read()  
 √ cant't read the last block at first   
-√ when offset is 4096*x, there exists problem.
+√ when offset is 4096*x, there exists problem.  
 fs_write() -- cant't written the last block at first   
 
 
