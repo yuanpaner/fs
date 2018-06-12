@@ -21,17 +21,29 @@
 /** Maximum number of open files */
 // #define FS_OPEN_MAX_COUNT 32
 
-#define eprintf(format, ...) \
-    fprintf (stderr, format, ##__VA_ARGS__)
-#define oprintf(format, ...) \
-    fprintf (stdout, format, ##__VA_ARGS__)
+#define DEBUG 1
+#if DEBUG
+    #define eprintf(format, ...) fprintf (stderr, format, ##__VA_ARGS__)
+    #define oprintf(format, ...) fprintf (stdout, format, ##__VA_ARGS__)
+    #define db 1
+#else
+    #define eprintf(format, ...) \
+    do {;} while (0)
+
+    #define oprintf(format, ...) \
+    do {;} while (0)
+
+    #define db 0 // const int db = 0; // 1: debug, 0: no
+#endif  
+
+
 #define clamp(x, y) (((x) <= (y)) ? (x) : (y))
 #define pickmax(x, y) (((x) > (y)) ? (x) : (y))
 
 #define FAT_EOC 0xFFFF
 // const static char FS_NAME[8] = "ECS150FS"; //from TA: Kind of redundant, since the string literal will evaulate to a pointer to a similar const char array in the global space.
 static char FS_NAME[8] = "ECS150FS"; //from TA: Kind of redundant, since the string literal will evaulate to a pointer to a similar const char array in the global space.
-const int db = 0; // 1: debug, 0: no
+
 
 /******************* Data Structure *********************/
 /* Metadata format
@@ -84,10 +96,11 @@ struct RootDirEntry {                // Inode structure
     uint8_t     open;
     char        unused[7];     // one char for indicating writing 'w'
 }__attribute__((packed));
+typedef struct RootDirEntry * direntry_t;
 
 struct FileDescriptor
 {
-    void * file_entry;
+    struct RootDirEntry * file_entry; // to be more clear, not use void*
     size_t offset;
 };
 
@@ -105,11 +118,11 @@ union Block {
 char * disk = NULL; //virtual disk name pointer. redundant acutally, from TA: Isn't really a reason to hold onto the name
 struct SuperBlock * sp = NULL;  // superblock pointer
 
-void * root_dir = NULL;         // root directory pointer
-struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
+direntry_t * root_dir = NULL;         // root directory pointer
+// struct RootDirEntry * dir_entry = NULL; //from Joël: better not to use any global variable if not necessary
 
-void * fat = NULL;              //FAT block pointer
-uint16_t * fat16 = NULL;        //fat array entry pointer
+uint16_t * fat = NULL;              //FAT block pointer
+// uint16_t * fat16 = NULL;        //fat array entry pointer
 //from TA: Keeping track of two variables is going to be more complex than just doing some typecasting occasionally.
 
 int fd_cnt = 0;     // fd used number; from TA: In C, memory used for global variables are initialized to 0 by default, so it is not necessary to make these assignments.
@@ -146,12 +159,13 @@ int get_valid_fd(){
 */
 struct RootDirEntry * get_dir(int id){
     if(root_dir == NULL) return NULL;
-    return (struct RootDirEntry *)(root_dir + id * sizeof(struct RootDirEntry));
+    return root_dir + id; // work?
+    // return (struct RootDirEntry *)(root_dir + id * sizeof(struct RootDirEntry));
 }
 
 
 void print_data(){
-    fat16 = fat;
+    uint16_t * fat16 = fat;
     ++fat16;
     char * buf = malloc(BLOCK_SIZE);
     for (int i = 1; i < sp->data_blk_count; ++i, ++fat16)
@@ -178,8 +192,8 @@ uint16_t * get_fat(int id){
         return NULL;
     }
 
-    return (uint16_t *)(fat + 2 * id);
-    // return (uint16_t *)(fat + sizeof(uint16_t) * id);
+    return fat + id;
+    // return (uint16_t *)(fat + 2 * id);
 }
 
 /* get next free data block
@@ -228,7 +242,7 @@ int get_valid_directory_entry(const char * filename, void ** entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int res =-1;
-    struct RootDirEntry * tmp = root_dir;
+    direntry_t tmp = root_dir;
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, ++tmp)
     {
         if(strcmp(tmp->filename, filename) == 0){
@@ -240,7 +254,8 @@ int get_valid_directory_entry(const char * filename, void ** entry_ptr){
     }
 
     if(res != -1 && entry_ptr)
-        *entry_ptr = root_dir + res * sizeof(struct RootDirEntry);
+        *entry_ptr = root_dir + res;
+        // *entry_ptr = root_dir + res * sizeof(struct RootDirEntry);
     return res;
 }
 /* version 1.0
@@ -279,7 +294,7 @@ int get_directory_entry(const char * filename, void ** entry_ptr){
         return -1;
     int i;
 
-    struct RootDirEntry * tmp = root_dir;
+    direntry_t tmp = root_dir;
     for (i = 0; i < FS_FILE_MAX_COUNT; ++i, ++tmp)
     {
         // struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry); 
@@ -371,8 +386,8 @@ void sp_setup(){
     // if(sp->fat_used > 1 && sp->rdir_used > 0) // write correctly already
     //     return ; // no need to set, has already been written
 
-    dir_entry = root_dir;
-    fat16 = fat;
+    direntry_t dir_entry = root_dir;
+    uint16_t fat16 = fat;
 
     sp->fat_used = 1;
     sp->rdir_used = 0;
@@ -467,8 +482,8 @@ void clear(){
 
     if(disk) free(disk);
     disk = NULL;
-    dir_entry = NULL;
-    fat16 = NULL;
+    // dir_entry = NULL;
+    // fat16 = NULL;
     fd_cnt = 0;
 
     for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
@@ -541,6 +556,7 @@ int fs_mount(const char *diskname)
 
     // memset(sp, 0, BLOCK_SIZE); // from TA: memset is redundant since you're overwriting the whole block anyway.
     // if(block_read(0, (void *)sp) < 0) { clear(); return -1; } // put into init_alloc
+    /*
     if(strncmp(sp->signature, FS_NAME, 8) != 0){
         clear();
         eprintf("fs_mount: non ECS150FS file system\n");
@@ -556,6 +572,14 @@ int fs_mount(const char *diskname)
     {
         clear();
         eprintf("fs_mount: fat size and block size dismatch\n");
+        return -1;
+    }
+    */
+    if(strncmp(sp->signature, FS_NAME, 8) != 0 \
+        || block_disk_count() != sp->total_blk_count \
+        || sp->data_blk_count > (sp->fat_blk_count * BLOCK_SIZE / 2) ){
+        clear();
+        eprintf("fs_mount: fail\n");
         return -1;
     }
 
@@ -585,7 +609,7 @@ int fs_mount(const char *diskname)
         }
     }
     // fat16 = get_fat(0);
-    fat16 = (uint16_t *)fat;
+    // fat16 = (uint16_t *)fat;
 
 
     sp_setup(); // for fat_used and rdir_used
@@ -725,24 +749,22 @@ int fs_info(void)
         eprintf("fs_info: no underlying virtual disk was mounted sucessfully\n");
         return -1;
     }
-    oprintf("FS Info:\n");
+    printf("FS Info:\n");
     // eprintf("signature=%s\n",sp->signature); // non-terminator
     // eprintf("%.*s\n", 8, sp->signature); // works
 
-    oprintf("total_blk_count=%d\n",sp->total_blk_count);
-    oprintf("fat_blk_count=%d\n",sp->fat_blk_count);
-    oprintf("rdir_blk=%d\n",sp->rdir_blk);
-    oprintf("data_blk=%d\n",sp->data_blk);
-    oprintf("data_blk_count=%d\n",sp->data_blk_count);
+    printf("total_blk_count=%d\n",sp->total_blk_count);
+    printf("fat_blk_count=%d\n",sp->fat_blk_count);
+    printf("rdir_blk=%d\n",sp->rdir_blk);
+    printf("data_blk=%d\n",sp->data_blk);
+    printf("data_blk_count=%d\n",sp->data_blk_count);
 
-    oprintf("fat_free_ratio=%d/%d\n", (sp->data_blk_count - sp->fat_used), sp->data_blk_count);
-    oprintf("rdir_free_ratio=%d/%d\n", (FS_FILE_MAX_COUNT - sp->rdir_used),FS_FILE_MAX_COUNT);
+    printf("fat_free_ratio=%d/%d\n", (sp->data_blk_count - sp->fat_used), sp->data_blk_count);
+    printf("rdir_free_ratio=%d/%d\n", (FS_FILE_MAX_COUNT - sp->rdir_used),FS_FILE_MAX_COUNT);
 
-    fat16 = fat;
+    uint16_t * fat16 = fat;
     for (int i = 0; i < sp->data_blk_count; ++i, ++fat16)
-    {
         oprintf("fat[%d]:%d\n", i, *fat16);
-    }
 
     if(db)
         print_data();
@@ -787,7 +809,10 @@ int fs_create(const char *filename)
         return -1;
     }
     /* @filename is invalid; or string @filename is too long*/
-    if (filename == NULL || filename[0] == 0 || strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
+    if (filename == NULL || \
+        strlen(filename) == 0 || \
+        filename[0] == 0 || \
+        strlen(filename) >= FS_FILENAME_LEN ) // strlen doesn't include NULL char
     {
         eprintf("fs_create: filaname is invalid\n");
         return -1;
@@ -810,6 +835,7 @@ int fs_create(const char *filename)
     //     eprintf("fs_create: root directory full error\n");
     //     return -1;
     // }
+    direntry_t dir_entry = NULL;
     int entry_id = get_valid_directory_entry(filename, (void *)&dir_entry);
     if(entry_id < 0)
         return -1; // no valid dir entry 
@@ -847,7 +873,7 @@ int fs_create(const char *filename)
 int fs_delete(const char *filename)
 {
     /* TODO: Phase 2 */
-    struct RootDirEntry * cur_entry = NULL;
+    direntry_t * cur_entry = NULL;
     int entry_id = get_directory_entry(filename, (void *)&cur_entry);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // cur_entry = get_dir(entry_id);
@@ -862,7 +888,7 @@ int fs_delete(const char *filename)
     }
 
     if(cur_entry->first_data_blk != FAT_EOC){ // not empty file
-        fat16 =  get_fat(cur_entry->first_data_blk);
+        uint16_t * fat16 =  get_fat(cur_entry->first_data_blk);
         erase_fat(fat16); // how about return -1?
     }
     
@@ -882,10 +908,11 @@ int fs_delete(const char *filename)
  *
  * Return: -1 if no underlying virtual disk was opened. 0 otherwise.
  */
+
 void print_file(struct RootDirEntry * fentry, bool debug){
     oprintf("file: %s, size: %d, data_blk: %d\n", fentry->filename, fentry->file_sz, fentry->first_data_blk);
     // for debug, print fat
-    if(fentry->first_data_blk != FAT_EOC && debug){
+    if(debug && fentry->first_data_blk != FAT_EOC){ // Joël: put debug in front to make it clear if I use it like this, but I change my mind
         oprintf("open: %d\n", fentry->open);
 
         uint16_t *tmp = get_fat(fentry->first_data_blk);
@@ -910,6 +937,7 @@ int fs_ls(void)
 
     // dir_entry = get_dir(0);
     dir_entry = (struct RootDirEntry *)root_dir;
+
     for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, ++dir_entry)
     {
         // dir_entry = get_dir(i);
@@ -947,6 +975,7 @@ int fs_open(const char *filename)
     if(fd_cnt >= FS_OPEN_MAX_COUNT || filename == NULL || strlen(filename) == 0 || strlen(filename) >= FS_FILENAME_LEN) // from TA: neglects to check for empty string
         return -1;
 
+    direntry_t dir_entry = NULL;
     int entry_id = get_directory_entry(filename, (void *)&dir_entry);
     if(entry_id < 0) return -1; // not found or sp, dir == NULL
     // or if file @filename is currently open. 0 otherwise.
@@ -997,10 +1026,10 @@ int fs_close(int fd)
     // if(fd < 0 || fd >= FS_OPEN_MAX_COUNT || filedes[fd] == NULL)  return -1;
     if(!is_valid_fd(fd)) return -1;
 
-    dir_entry = filedes[fd]->file_entry;
+    // direntry_t dir_entry = filedes[fd]->file_entry;
     
-    dir_entry->open -= 1;
-    dir_entry->unused[0] = 'x';
+    filedes[fd]->file_entry->open -= 1;
+    filedes[fd]->file_entry->unused[0] = 'x';
 
     free(filedes[fd]);
     filedes[fd] = NULL;
@@ -1026,9 +1055,10 @@ int fs_stat(int fd)
     if(!is_valid_fd(fd)) 
         return -1;
 
-    dir_entry = filedes[fd]->file_entry;
+    // dir_entry = filedes[fd]->file_entry;
 
-    return dir_entry->file_sz;
+    return filedes[fd]->file_entry->file_sz;
+    // return dir_entry->file_sz;
 }
 
 
@@ -1051,8 +1081,11 @@ int fs_lseek(int fd, size_t offset)
     /* TODO: Phase 3 */
     if(!is_valid_fd(fd)) return -1;
 
-    dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
-    if(offset > dir_entry->file_sz) return -1;
+    // dir_entry = (struct RootDirEntry *)(filedes[fd]->file_entry);
+    // if(offset > dir_entry->file_sz) return -1;
+
+
+    if(offset > filedes[fd]->file_entry->file_sz) return -1;
 
     filedes[fd]->offset = offset;
 
@@ -1066,15 +1099,15 @@ uint16_t get_offset_blk(int fd, size_t offset){
         return 0; // impossible
     }
 
-    dir_entry = filedes[fd]->file_entry;
+    // dir_entry = filedes[fd]->file_entry;
     // if(offset == 0) return dir_entry->first_data_blk;
-    if(offset >= dir_entry->file_sz){
+    if(offset >= filedes[fd]->file_entry->file_sz){
         // eprintf("get_offset_blk fail: offset is larger than file size\n");
         return 0;
     }
     
     int no_blk = file_blk_count(offset);
-    uint16_t blk = dir_entry->first_data_blk;
+    uint16_t blk = filedes[fd]->file_entry->first_data_blk;
     while(no_blk > 1){ // need some error check
         blk = *(get_fat(blk)); //impossible NULL pointer
         no_blk -= 1;
@@ -1113,7 +1146,7 @@ int fs_write(int fd, void *buf, size_t count)
 {
     if(!is_valid_fd(fd)) return -1;
 
-    struct RootDirEntry * w_dir_entry = filedes[fd]->file_entry;
+    direntry_t * w_dir_entry = filedes[fd]->file_entry;
     if(w_dir_entry->unused[0] == 'w'){ // from Bradley: Really should not be making your operations dependent on parts of the data in the padding regions.
         eprintf("other writing continues, unable to write\n");
         return -1;
@@ -1121,11 +1154,11 @@ int fs_write(int fd, void *buf, size_t count)
     if(count == 0) return 0;
 
     size_t offset = filedes[fd]->offset;
-    if(offset > w_dir_entry->file_sz)
-        return -1;
+    // if(offset > w_dir_entry->file_sz) // impossible here
+    //     return -1;
 
     /* start to write */
-
+    uint16_t * fat16;
     w_dir_entry->unused[0] = 'w';
 
     if( w_dir_entry->first_data_blk == FAT_EOC){ // if empty file, no blk assign; we allocate a new block
@@ -1179,12 +1212,14 @@ int fs_write(int fd, void *buf, size_t count)
     buf_idx = clamp(BLOCK_SIZE - offset % BLOCK_SIZE, leftover_count);
     // memcpy(bounce_buffer + w_dir_entry->file_sz % BLOCK_SIZE, buf, buf_idx);
     memcpy(bounce_buffer + offset % BLOCK_SIZE, buf, buf_idx);
-    leftover_count -= buf_idx;
+    
     if(block_write(sp->data_blk + write_blk, bounce_buffer) < 0){
         w_dir_entry->unused[0] = 'n';
         // free(bounce_buffer);
         return 0;
     } // write the first blk
+
+    leftover_count -= buf_idx;
     fat16 = get_fat(write_blk);
     if(*fat16 == 0){
         *fat16 = FAT_EOC;
@@ -1514,7 +1549,7 @@ int fs_read(int fd, void *buf, size_t count)
 {
     /* TODO: Phase 4 */
     if(!is_valid_fd(fd)) return -1;
-    dir_entry = filedes[fd]->file_entry;
+    direntry_t dir_entry = filedes[fd]->file_entry;
 
     size_t offset = filedes[fd]->offset;
     int32_t real_count = clamp(dir_entry->file_sz - offset, count);
@@ -1544,10 +1579,9 @@ int fs_read(int fd, void *buf, size_t count)
     buf_idx += clamp(leftover_count, BLOCK_SIZE - offset % BLOCK_SIZE);
 
     offset += buf_idx; // update offset
+    leftover_count -= buf_idx; // remaining // leftover_count -= BLOCK_SIZE; // error
+    // if(leftover_count < 0) leftover_count = 0; // no need
 
-    // leftover_count -= BLOCK_SIZE; // error
-    leftover_count -= buf_idx; // remaining
-    if(leftover_count < 0) leftover_count = 0;
     read_blk = *(get_fat(read_blk));
 
     while(leftover_count > 0 && read_blk != FAT_EOC){
@@ -1579,9 +1613,10 @@ int fs_read(int fd, void *buf, size_t count)
 
     // free(bounce_buffer);
     real_count -= leftover_count;
-    if(fs_lseek(fd, real_count + offset) < 0) return -1;
+    // if(fs_lseek(fd, real_count + offset) < 0) return -1;
 
     filedes[fd]->offset = offset;
+    
     return real_count - leftover_count;
 }
 
