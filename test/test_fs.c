@@ -403,7 +403,7 @@ void thread_fs_read_multiple(void *arg)
 		printf("Content of the file:\n");
 		printf("%.*s\n", (int)(stat-offset), buf);
 		free(buf);
-		// buf = NULL;
+		buf = NULL;
 	}
 	for (int i = 0; i < itr; ++i)
 	{
