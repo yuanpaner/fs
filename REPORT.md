@@ -28,9 +28,12 @@ Above the block layer, the FS layer is in charge of the actual file system manag
 
 ## Implementation of Read and Write  
 I treat the first block to read or write specially, because of the offset needed to take care.  
+
 Take writing as example, I fetch the first written block according to the offset at first and read the whole block to the bounce_buffer; then I write corresponsive length of bits to bounce_buffer starting from the locate calculated from offset and write it back to the block. Then I continue to write the whole block one by one only if the leftover written bits are more than BLOCK_SIZE. When I reach the last block I need to write, I do the similar thing as the first block to write -- read the block to bounce_buffer, write the leftover length of bits to the bounce_buffer starting from position 0 and then write it back to the block to avoid overwriting the remaining part in the block.  
-In a work, I take the first and last written blocks specially.  
 At each writing during the whole procedure, I check whether the current block is the last block the current file hold. If so, I search the next avaliable block to expand the file size and continue writing if capable, so the writing operaton will do as much as possbile.  
+
+In a work, I take the first and last written blocks specially.  
+
 
 ## Questions and Answers
 
