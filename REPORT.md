@@ -2,41 +2,34 @@ ECS 150: Project #4 - File system
 I finally finish it on June 9, 2018
 
 question:   
-How to read and write efficiently? I update after each block read and write,  
-read and write the first block specially and continue the next blocks if exist.  
+How to read and write efficiently? I update after each block read and write, read and write the first block specially and continue the next blocks if exist.  
 Each time I check the remaining part to do this.  
 
-How to avoid conflict writing to the same file? System has a global fiel table,  
-how could we implement this in user level?  
+How to avoid conflict writing to the same file? System has a global fiel table, how could we implement this in user level?  
 (final) file directory vs metadata ? first block not good enough?
 
-How to update offset better? write or read a block and update it immediately or  
-after the whole operation done?
+How to update offset better? write or read a block and update it immediately or after the whole operation done?
 
-Line 840 about touch it. could i use the unused bits and write back to disk to  
-avoid writing the same file from diff places?
+Line 840 about touch it. could i use the unused bits and write back to disk to avoid writing the same file from diff places?
 
-If I shouldn't use the unused bits in file system which has no guarantee that  
-others also write under the same rules.
+If I shouldn't use the unused bits in file system which has no guarantee that others also write under the same rules.  
+
+How to make the read and write efficiency?  
 
 # General Information
-This project is to implement the support of a very simple file system based on  
-a FAT and supports up to 128 files in a single root directory.  
+This project is to implement the support of a very simple file system based on a FAT and supports up to 128 files in a single root directory.  
 
-The file system is implemented on top of a virtual disk, which is logically  
-split into blocks.  
+The file system is implemented on top of a virtual disk, which is logically split into blocks.  
 
-The first software layer involved in the file system implementation is the  
-block API and is provided, which is used to open or close a virtual disk,  
-and read or write entire blocks from it.
+The first software layer involved in the file system implementation is the block API and is provided, which is used to open or close a virtual disk, and read or write entire blocks from it.
 
-Above the block layer, the FS layer is in charge of the actual  
-file system management. Through the FS layer, we can mount a virtual disk,  
-list the files that are part of the disk, add or delete new files,  
-read from files or write to files, etc.
+Above the block layer, the FS layer is in charge of the actual file system management. Through the FS layer, we can mount a virtual disk, list the files that are part of the disk, add or delete new files, read from files or write to files, etc.
 
 ## Implementation of Read and Write  
-Read
+I treat the first block to read or write specially, because of the offset needed to take care.  
+Take writing as example, I fetch the first written block according to the offset at first and read the whole block to the bounce_buffer; then I write corresponsive length of bits to bounce_buffer starting from the locate calculated from offset and write it back to the block. Then I continue to write the whole block one by one only if the leftover written bits are more than BLOCK_SIZE. When I reach the last block I need to write, I do the similar thing as the first block to write -- read the block to bounce_buffer, write the leftover length of bits to the bounce_buffer starting from position 0 and then write it back to the block to avoid overwriting the remaining part in the block.  
+In a work, I take the first and last written blocks specially.  
+At each writing during the whole procedure, I check whether the current block is the last block the current file hold. If so, I search the next avaliable block to expand the file size and continue writing if capable, so the writing operaton will do as much as possbile.  
 
 ## Questions and Answers
 1. 
@@ -112,8 +105,3 @@ https://en.wikipedia.org/wiki/Thread-local_storage
 https://www.ibm.com/support/knowledgecenter/en/ssw_i5_54/apis/mprotect.htm  
 http://pubs.opengroup.org/onlinepubs/009696799/functions/mprotect.html  
 
-
-
-
-914517045
-999279751
