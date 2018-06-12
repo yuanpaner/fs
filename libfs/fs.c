@@ -103,8 +103,10 @@ union Block {
 /******************* Global Var *********************/
 char * disk = NULL; //virtual disk name pointer. redundant acutally, from TA: Isn't really a reason to hold onto the name
 struct SuperBlock * sp = NULL;  // superblock pointer
+
 void * root_dir = NULL;         // root directory pointer
 struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
+
 void * fat = NULL;              //FAT block pointer
 uint16_t * fat16 = NULL;        //fat array entry pointer
 //from TA: Keeping track of two variables is going to be more complex than just doing some typecasting occasionally.
@@ -373,7 +375,7 @@ void sp_setup(){
 
     sp->fat_used = 1;
     sp->rdir_used = 0;
-    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, dir_entry++)
+    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, ++dir_entry)
     {
         if(dir_entry->filename[0] != 0){
             sp->rdir_used += 1;
@@ -509,36 +511,6 @@ int init_alloc(){
         filedes[i] = NULL;
     fd_cnt = 0;
 
-    /*
-    sp = malloc(BLOCK_SIZE); 
-
-    if(sp == NULL) {
-        clear();
-        return -1;
-    }
-
-    root_dir = malloc(BLOCK_SIZE); // root_dir = calloc(BLOCK_SIZE,1);
-    if(root_dir == NULL) {
-        clear();
-        return -1;
-    }
-
-    fat = malloc(BLOCK_SIZE * sp->fat_blk_count); // fat = calloc(BLOCK_SIZE * sp->fat_blk_count, 1);
-    if(fat == NULL) {
-        clear();
-        return -1;
-    }
-
-    for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
-        filedes[i] = NULL;
-    fd_cnt = 0;
-
-    memset(sp, 0, BLOCK_SIZE);
-    memset(root_dir, 0, BLOCK_SIZE);
-    memset(fat, 0, BLOCK_SIZE * sp->fat_blk_count);    
-    
-    */
-
     return 0;   
 }
 
@@ -613,11 +585,6 @@ int fs_mount(const char *diskname)
     }
     // fat16 = get_fat(0);
     fat16 = (uint16_t *)fat;
-
-
-    // for (int i = 0; i < FS_OPEN_MAX_COUNT; ++i)
-    //     filedes[i] = NULL;
-    // fd_cnt = 0;
 
 
     sp_setup(); // for fat_used and rdir_used
