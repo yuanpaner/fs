@@ -28,7 +28,8 @@
 #define clamp(x, y) (((x) <= (y)) ? (x) : (y))
 #define pickmax(x, y) (((x) > (y)) ? (x) : (y))
 #define FAT_EOC 0xFFFF
-const static char FS_NAME[8] = "ECS150FS";
+// const static char FS_NAME[8] = "ECS150FS"; //from TA: Kind of redundant, since the string literal will evaulate to a pointer to a similar const char array in the global space.
+static char FS_NAME[8] = "ECS150FS"; //from TA: Kind of redundant, since the string literal will evaulate to a pointer to a similar const char array in the global space.
 const int db = 0; // 1: debug, 0: no
 
 /******************* Data Structure *********************/
@@ -59,7 +60,7 @@ Offset  Length (bytes)  Description
 
 struct SuperBlock 
 {
-    char     signature[8];
+    char     signature[8]; // from Bradley: Should use fixed size type -- "The meaning of a char in C is just the smallest addressable unit in the system, It just must at minimum be able to represent the values -128 to 127 if signed, Or 0-255 unsigned; It's commonly 8 bit, But not necessarily guaranteed in all systems"
     uint16_t total_blk_count;  // Total amount of blocks of virtual disk 
     uint16_t rdir_blk;         // Root directory block index
     uint16_t data_blk;         // Data block start index
@@ -67,7 +68,7 @@ struct SuperBlock
     uint8_t  fat_blk_count;    // Number of blocks for FAT
 
     uint16_t  fat_used;     // myself
-    uint16_t  rdir_used;    
+    uint16_t  rdir_used;    // from TA: You won't be able to guarantee that other users of the filesystem will store this for you, so it doesn't really help speed up anything without further identification fields.
 
     char     unused[4063];     // 4079 Unused/Padding, I use 32bits
 }__attribute__((packed));
@@ -100,15 +101,17 @@ union Block {
 */
 
 /******************* Global Var *********************/
-char * disk = NULL; //virtual disk name pointer
+char * disk = NULL; //virtual disk name pointer. redundant acutally, from TA: Isn't really a reason to hold onto the name
 struct SuperBlock * sp = NULL;  // superblock pointer
 void * root_dir = NULL;         // root directory pointer
 struct RootDirEntry * dir_entry = NULL; // 32B * 128 entry, file entry pointer
 void * fat = NULL;              //FAT block pointer
 uint16_t * fat16 = NULL;        //fat array entry pointer
+//from TA: Keeping track of two variables is going to be more complex than just doing some typecasting occasionally.
 
-int fd_cnt = 0;     // fd used number
+int fd_cnt = 0;     // fd used number; from TA: In C, memory used for global variables are initialized to 0 by default, so it is not necessary to make these assignments.
 struct FileDescriptor* filedes[FS_OPEN_MAX_COUNT];
+
 
 
 /******************* helper function*********************/
@@ -214,21 +217,46 @@ int file_blk_count(uint32_t sz){
 /* get next free file directory entry index;
  * check the duplicated existed filename by @filename
  * return index number; -1 if fail. set the entry_ptr address 
+ * version 1.0  
+ * problem 1 -- break; // from TA: If you break early here, then you may run into a case where an empty slot exists before a file by the same name, and you fail to detect that the filename already exists.
+ * problem 2 -- @void *  entry_ptr, pass by value, not work
  */
+int get_valid_directory_entry(const char * filename, void ** entry_ptr){
+    if(filename == NULL || root_dir == NULL || sp == NULL)
+        return -1;
+    int res =-1;
+    struct RootDirEntry * tmp = root_dir;
+    for (int i = 0; i < FS_FILE_MAX_COUNT; ++i, ++tmp)
+    {
+        if(strcmp(tmp->filename, filename) == 0){
+            eprintf("get_valid_directory_entry: @filename already exists error\n");
+            return -1;
+        }
+        if(tmp->filename[0] == 0 && res == -1) 
+            res = i;
+    }
+
+    if(res != -1 && entry_ptr)
+        *entry_ptr = root_dir + i * sizeof(struct RootDirEntry);
+    return res;
+}
+/* version 1.0
 int get_valid_directory_entry(const char * filename, void *  entry_ptr){
     if(filename == NULL || root_dir == NULL || sp == NULL)
         return -1;
     int i;
-    for (i = 0; i < FS_FILE_MAX_COUNT; ++i)
+    int res =-1;
+    struct RootDirEntry * tmp = root_dir;
+    for (i = 0; i < FS_FILE_MAX_COUNT; ++i, ++tmp)
     {
         // struct RootDirEntry * tmp = root_dir + i * sizeof(struct RootDirEntry);
-        struct RootDirEntry * tmp = get_dir(i);
+        // struct RootDirEntry * tmp = get_dir(i);
         if(strcmp(tmp->filename, filename) == 0){
             eprintf("get_valid_directory_entry: @filename already exists error\n");
             return -1;
         }
         if(tmp->filename[0] == 0)
-            break;
+            break; // from TA: If you break early here, then you may run into a case where an empty slot exists before a file by the same name, and you fail to detect that the filename already exists.
     }
     if(i == FS_FILE_MAX_COUNT){
         eprintf("fs_create: root directory full error\n");
@@ -239,6 +267,7 @@ int get_valid_directory_entry(const char * filename, void *  entry_ptr){
         entry_ptr = root_dir + i * sizeof(struct RootDirEntry);
     return i;
 }
+*/
 
 /* get the dir entry id by filename; pass the entry pointer to @entry_ptr
 */
@@ -416,6 +445,7 @@ int write_meta(){
 /*
  * free space to sp, root_dir, and fat; set to zero for all of them
  * fail return -1; succeed return 0;
+ * from TA: Part of this task should probably include closing the virtual disk
 */
 void clear(){
     if(sp) {
@@ -457,6 +487,7 @@ void clear(){
  * initialize filedes, fd_cnt
  * initialize sp_setup()
  * fail return -1; succeed return 0;
+ * unused for the first time
 */
 int init_alloc(){
 
@@ -517,7 +548,7 @@ int fs_mount(const char *diskname)
     sp = malloc(BLOCK_SIZE); 
     if(sp == NULL) { clear(); return -1; }
 
-    memset(sp, 0, BLOCK_SIZE);
+    // memset(sp, 0, BLOCK_SIZE); // from TA: memset is redundant since you're overwriting the whole block anyway.
     if(block_read(0, (void *)sp) < 0) { clear(); return -1; }
     if(strncmp(sp->signature, FS_NAME, 8) != 0){
         clear();
@@ -805,18 +836,9 @@ int fs_create(const char *filename)
     dir_entry->file_sz = 0;
     dir_entry->open = 0;
     dir_entry->first_data_blk = FAT_EOC; 
-    dir_entry->last_data_blk = FAT_EOC;
-    memset(dir_entry->unused, 0, 7);
-    // dir_entry->first_data_blk = get_free_blk_idx(); // entry, should assign block here, in case the file size is 0;
-    // if(dir_entry->first_data_blk == -1){ // not valid fat
-    //     memset(dir_entry->filename, 0, sizeof(dir_entry->filename)); // make it free again.
-    //     return -1; // unmount?
-    // }
-    // dir_entry->last_data_blk = dir_entry->first_data_blk;
-    // fat16 = get_fat(dir_entry->first_data_blk);
-    // *fat16 = 0xFFFF;
+    dir_entry->last_data_blk = FAT_EOC; // from TA: This variable should not be used in a way where you assume it will be ready for you, since you are expected to be able to read files created by fs_ref. You don't actually recalculate these values when mounting the filesystem, so it feels like your logic will probably be assuming their presence always.
+    memset(dir_entry->unused, 0, 7); // from TA: If it's unused, you probably shouldn't bother touching it.
 
-    // sp->fat_used += 1;
     sp->rdir_used += 1; // how to deal with @setup_sp
 
     write_meta(); 
@@ -936,7 +958,7 @@ int fs_ls(void)
 int fs_open(const char *filename)
 {
     /* TODO: Phase 3 */
-    if(fd_cnt >= FS_OPEN_MAX_COUNT || filename == NULL || strlen(filename) >= FS_FILENAME_LEN)
+    if(fd_cnt >= FS_OPEN_MAX_COUNT || filename == NULL || strlen(filename) == 0 || strlen(filename) >= FS_FILENAME_LEN) // from TA: neglects to check for empty string
         return -1;
 
     int entry_id = get_directory_entry(filename, NULL);
@@ -950,13 +972,18 @@ int fs_open(const char *filename)
     // ++(dir_entry->open); // not here
 
     filedes[fd] = malloc(sizeof(struct FileDescriptor));
+    if(fildes[fd] == NULL) return -1;
+
     filedes[fd]->file_entry = dir_entry;
     filedes[fd]->offset = 0;
-    if(fs_lseek(fd, 0) < 0){
+
+    /*
+    if(fs_lseek(fd, 0) < 0){ // actually unecessary, already set zero // from Bradley: Avoid calling external library functions internally this way, since you have to pay error checking overhead more than once. Better to implement internal calls for purposes such as these.
         free(filedes[fd]);
         return -1;
     }
-    
+    */
+
     ++(dir_entry->open);
     dir_entry->unused[0] = 'o';
 
@@ -1101,7 +1128,7 @@ int fs_write(int fd, void *buf, size_t count)
     if(!is_valid_fd(fd)) return -1;
 
     struct RootDirEntry * w_dir_entry = filedes[fd]->file_entry;
-    if(w_dir_entry->unused[0] == 'w'){
+    if(w_dir_entry->unused[0] == 'w'){ // from Bradley: Really should not be making your operations dependent on parts of the data in the padding regions.
         eprintf("other writing continues, unable to write\n");
         return -1;
     }
@@ -1152,9 +1179,9 @@ int fs_write(int fd, void *buf, size_t count)
     }
 
     /* write the first block */
-    void * bounce_buffer = calloc(BLOCK_SIZE, 1);
+    void * bounce_buffer = calloc(BLOCK_SIZE, 1); // from Bradley: If you only need the memory for the duration of a function and know the size beforehand, allocating on the stack may be better because you avoid the overhead of needing to request memory from the system and marking it used.
     int buf_idx = 0;
-    if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){
+    if(block_read(write_blk + sp->data_blk, bounce_buffer) < 0 ){ // from Bradley, Should not always have to read.
         free(bounce_buffer);
         w_dir_entry->unused[0] = 'n';
         return 0;

@@ -13,6 +13,8 @@ how could we implement this in user level?
 How to update offset better? write or read a block and update it immediately or  
 after the whole operation done?
 
+Line 840 about touch it. could i use the unused bits and write back to disk to  
+avoid writing the same file from diff places?
 
 # General Information
 This project is to implement the support of a very simple file system based on  
