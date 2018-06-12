@@ -347,7 +347,7 @@ void thread_fs_read(void *arg)
 void thread_fs_read_multiple(void *arg)
 {
 	struct thread_arg *t_arg = arg;
-	char *diskname, *filename, *buf;
+	char *diskname, *filename, *buf = NULL;
 
 	int stat, read;
 	int itr;
