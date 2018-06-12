@@ -556,7 +556,9 @@ int init_alloc(){
 int fs_mount(const char *diskname)
 {
     if (block_disk_open(diskname) != 0) return -1;
-    
+    disk = malloc(strlen(diskname) + 1);
+    strcpy(disk, diskname);
+
     if(init_alloc() < 0) return -1; // allocate error
 
     /* super block read */
@@ -616,8 +618,6 @@ int fs_mount(const char *diskname)
     //     filedes[i] = NULL;
     // fd_cnt = 0;
 
-    disk = malloc(strlen(diskname) + 1);
-    strcpy(disk, diskname);
 
     sp_setup(); // for fat_used and rdir_used
     write_meta(); // for data used
