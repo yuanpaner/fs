@@ -344,6 +344,81 @@ void thread_fs_read(void *arg)
 	free(buf);
 }
 
+void thread_fs_read_multiple(void *arg)
+{
+	struct thread_arg *t_arg = arg;
+	char *diskname, *filename, *buf;
+
+	int stat, read;
+	int itr;
+
+	if (t_arg->argc < 3)
+		die("need <diskname> <filename> <times>");
+
+	diskname = t_arg->argv[0];
+	filename = t_arg->argv[1];
+	itr = atoi(t_arg->argv[2]);
+	int * fs_fd = malloc(itr * sizeof(int));
+
+	if (fs_mount(diskname))
+		die("Cannot mount diskname");
+
+	int offset;
+	for (int i = 0; i < itr; ++i)
+		fs_fd[i] = -1;
+
+	for (int i = 0; i < itr; ++i)
+	{
+		fs_fd[i] = fs_open(filename);
+		if (fs_fd[i] < 0) {
+			// fs_umount();
+			test_fs_error("Cannot open file at %d\n", i);
+			break;
+		}
+		stat = fs_stat(fs_fd[i]);
+		if (stat < 0) {
+			test_fs_error("Cannot stat file at %d\n", i);
+			break;
+		}
+		if (!stat) {
+			/* Nothing to read, file is empty */
+			printf("Empty file\n");
+			break;
+		}
+		offset = i;
+		buf = malloc(stat-offset);
+		if (!buf) {
+			perror("malloc");
+			test_fs_error("Cannot malloc");
+			break;
+		}
+
+		if(fs_lseek(fs_fd[i], offset) < 0){
+			test_fs_error("Offset out of boundary");
+			break;
+		}
+
+		read = fs_read(fs_fd[i], buf, stat-offset);
+		printf("Read file '%s' (%d/%d bytes) with offset '%d'\n", filename, read, stat, offset);
+		printf("Content of the file:\n");
+		printf("%.*s\n", (int)(stat-offset), buf);
+		free(buf);
+		// buf = NULL;
+	}
+	for (int i = 0; i < itr; ++i)
+	{
+		if(fs_fd[i] > 0){
+			if(fs_close(fs_fd[i]))
+				test_fs_error("Cannot close file");
+		}
+	}
+
+	if (fs_umount())
+		die("cannot unmount diskname");
+
+	if(buf) free(buf);
+}
+
 //opt 0: buffer, 1: file, 2: char*
 void thread_fs_write(void *arg)
 {
@@ -460,6 +535,7 @@ static struct {
 	{ "cat",	thread_fs_cat },
 	{ "stat",	thread_fs_stat },
 	{ "read",	thread_fs_read },
+	{ "readm",	thread_fs_read_multiple },
 	{ "write",	thread_fs_write },
 };
 

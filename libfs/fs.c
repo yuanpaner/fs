@@ -27,6 +27,7 @@
     fprintf (stdout, format, ##__VA_ARGS__)
 #define clamp(x, y) (((x) <= (y)) ? (x) : (y))
 #define pickmax(x, y) (((x) > (y)) ? (x) : (y))
+
 #define FAT_EOC 0xFFFF
 // const static char FS_NAME[8] = "ECS150FS"; //from TA: Kind of redundant, since the string literal will evaulate to a pointer to a similar const char array in the global space.
 static char FS_NAME[8] = "ECS150FS"; //from TA: Kind of redundant, since the string literal will evaulate to a pointer to a similar const char array in the global space.
