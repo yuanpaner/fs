@@ -79,14 +79,13 @@ read in many different places, observe the offset
 
 open one file many times  √
 
-### test_fs_yuan.h  
+### test_fs_yuan.sh  
 Add some corner cases to write into the disk.
-```c
+```python
 run_tests() {
-    # Phase 1
     run_fs_info
     run_fs_info_full
-    # Phase 2
+
     run_fs_simple_create
     run_fs_xM_create # yuan: add large file
     run_fs_create_multiple # yuan: add two with test_fs.x, ls with fs_ref.x, within boundary
