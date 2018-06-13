@@ -17,6 +17,20 @@ Each time I check the remaining part to do this.
 
 - [ ] How to make the read and write efficiency?  
 
+
+感觉我的write没必要一开始计算offset啊，因为create之后就立马会write，总是从0开始的。。。我为什么要这么搞？  有没有可能我可以对一个file write很多次，例如append这种，从结尾开始。我的code已经具备这个功能，但是需要一个合适的test。  
+  
+可以open好几次？在不同的地方读写？ 每次读写都会移动相同的offset还是。听老师上课的意思互相独立那就是各有各的offset.  
+如果不是用dup2这种，那就是independent fd。  
+读ok，缺功能， 每个文件都从不同的地方读。  
+写怎么办。我在csif上测试的结果是，写的时候会报提醒！在文件本身，设置一个open的检查。不能同时write。每次都是从末尾写么，会不会从中间写。功能已有，缺test检查。  
+
+Read 也一样，会不会有fd1在write，fd2在read，并且同时进行，那么就要用事实更新的file_sz  
+见test  
+
+w_dir_entry->first_data_blk == 0xFFFF 说明block的个数怎么都不会是0xFFFF个对吧。power(2, 16) * 4K  
+
+
 # General Information
 This project is to implement the support of a very simple file system based on a FAT and supports up to 128 files in a single root directory.  
 

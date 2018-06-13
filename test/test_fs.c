@@ -283,7 +283,7 @@ void thread_fs_read(void *arg)
 	char *diskname, *filename, *buf;
 	int fs_fd;
 	int stat, read;
-	int offset;
+	int offset, count = 0;
 
 	if (t_arg->argc < 3)
 		die("need <diskname> <filename> <offset>");
@@ -291,6 +291,8 @@ void thread_fs_read(void *arg)
 	diskname = t_arg->argv[0];
 	filename = t_arg->argv[1];
 	offset = atoi(t_arg->argv[2]);
+	if(t_arg->argc >=4)
+		count = atoi(t_arg->argv[3]);
 
 	if (fs_mount(diskname))
 		die("Cannot mount diskname");
@@ -308,12 +310,23 @@ void thread_fs_read(void *arg)
 	}
 	if (!stat) {
 		/* Nothing to read, file is empty */
-		printf("Empty file\n");
-		return;
+		fs_close(fs_fd);
+		fs_umount();
+		// printf("Empty file\n");
+		die("Empty file");
 	}
 
 	// printf("offset = %d, stat = %d\n", offset, stat);
-	buf = malloc(stat-offset);
+	if(fs_lseek(fs_fd, offset) < 0){
+		fs_close(fs_fd);
+		fs_umount();
+		die("Offset out of boundary");
+	}
+	
+	if(count > stat - offset)
+		count = stat - offset;
+
+	buf = malloc(count);
 	if (!buf) {
 		perror("malloc");
 		fs_close(fs_fd);
@@ -321,13 +334,9 @@ void thread_fs_read(void *arg)
 		die("Cannot malloc");
 	}
 
-	if(fs_lseek(fs_fd, offset) < 0){
-		fs_close(fs_fd);
-		fs_umount();
-		die("Offset out of boundary");
-	}
+	
 
-	read = fs_read(fs_fd, buf, stat-offset);
+	read = fs_read(fs_fd, buf, count);
 
 	if (fs_close(fs_fd)) {
 		fs_umount();
@@ -339,7 +348,7 @@ void thread_fs_read(void *arg)
 
 	printf("Read file '%s' (%d/%d bytes) with offset '%d'\n", filename, read, stat, offset);
 	printf("Content of the file:\n");
-	printf("%.*s\n", (int)(stat-offset), buf);
+	printf("%.*s\n", count, buf);
 
 	free(buf);
 }
@@ -403,7 +412,7 @@ void thread_fs_read_multiple(void *arg)
 		printf("Content of the file:\n");
 		printf("%.*s\n", (int)(stat-offset), buf);
 		free(buf);
-		buf = NULL;
+		buf = NULL; // or will double free at line 419
 	}
 	for (int i = 0; i < itr; ++i)
 	{
