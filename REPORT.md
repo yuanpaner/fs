@@ -19,22 +19,20 @@ What I did is ok.
 
 - [ ] How to make the read and write efficiency?  
 
-- [ ](final) file directory vs metadata ? first block not good enough?  
+- [ ] (final) file directory vs metadata ? first block not good enough?  
 
 
 # General Information
 This project is to implement the support of a very simple file system based on a FAT and supports up to 128 files in a single root directory.  
-
 The file system is implemented on top of a virtual disk, which is logically split into blocks.  
-
 The first software layer involved in the file system implementation is the block API and is provided, which is used to open or close a virtual disk, and read or write entire blocks from it.
-
 Above the block layer, the FS layer is in charge of the actual file system management. Through the FS layer, we can mount a virtual disk, list the files that are part of the disk, add or delete new files, read from files or write to files, etc.
 
 ## Implementation of Read and Write  
 I treat the first block to read or write specially, because of the offset needed to take care.  
 
-Take writing as example, I fetch the first written block according to the offset at first and read the whole block to the bounce_buffer; then I write corresponsive length of bits to bounce_buffer starting from the locate calculated from offset and write it back to the block. Then I continue to write the whole block one by one only if the leftover written bits are more than BLOCK_SIZE. When I reach the last block I need to write, I do the similar thing as the first block to write -- read the block to bounce_buffer, write the leftover length of bits to the bounce_buffer starting from position 0 and then write it back to the block to avoid overwriting the remaining part in the block.  
+Take writing as example, I fetch the first written block according to the offset at first and read the whole block to the bounce_buffer; then I write corresponsive length of bits to bounce_buffer starting from the locate calculated from offset and write it back to the block. Then I continue to write the whole block one by one only if the leftover written bits are more than BLOCK_SIZE. When I reach the last block I need to write, I do the similar thing as the first block to write -- read the block to bounce_buffer, write the leftover length of bits to the bounce_buffer starting from position 0 and then write it back to the block to avoid overwriting the remaining part in the block. 
+ 
 At each writing during the whole procedure, I check whether the current block is the last block the current file hold. If so, I search the next avaliable block to expand the file size and continue writing if capable, so the writing operaton will do as much as possbile.  
 
 In a work, I take the first and last written blocks specially.  
