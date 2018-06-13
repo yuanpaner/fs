@@ -73,7 +73,8 @@ clean:
 	@echo "CLEAN	$(CUR_PWD)"
 	$(Q)$(MAKE) V=$(V) -C $(FSPATH) clean
 	$(Q)rm -rf $(objs) $(deps) $(programs)
-	$(Q)rm -f *.out *.html output* # py, test
+	# $(Q)rm -f *.out *.html output* # py, test
+
 # Keep object files around
 .PRECIOUS: %.o
 .PHONY: clean $(libfs)
