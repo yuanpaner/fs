@@ -322,7 +322,7 @@ void thread_fs_read(void *arg)
 		fs_umount();
 		die("Offset out of boundary");
 	}
-	
+
 	if(count > stat - offset)
 		count = stat - offset;
 
@@ -519,11 +519,12 @@ void thread_fs_write(void *arg)
 	// 	.argv = malloc(3*sizeof(char*));
 	// };
 	struct thread_arg arg2;
-	arg2.argc = 3;
-	arg2.argv = malloc(3*sizeof(char*));
+	arg2.argc = 4;
+	arg2.argv = malloc(4*sizeof(char*));
 	arg2.argv[0] = diskname;
 	arg2.argv[1] = filename;
 	arg2.argv[2] = "0";
+	arg2.argv[3] = "100";
 
 	thread_fs_read(&arg2);
 
